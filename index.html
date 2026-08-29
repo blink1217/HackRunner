@@ -863,6 +863,15 @@ function schedule(){
     else if(st.leadInstrument==='horn') trumpet(t,st.chords[b][0]+24,.15,.25)
     else acidNote(t,st.root+12+l.n-12,.24,true,l.len)}})}
   if(pushAmount>1&&s===0) trumpet(t,st.root+36, .4, .5)
+  // V3 vocal probe — every 2 bars, whenever the engine plays (idle or running)
+  if(s===0 && Math.floor(stepIndex/16)%2===0 && v3Engine && v3Engine.vocal && prefs.stems.vocal!==false){
+   const dv=isRunning? ((Date.now()-lapStart)/1000 - getTargetSec()*Math.min((Date.now()-lapStart)/1000/getTargetSec(),1)) : 0
+   const cad=liveBPM||targetBPM
+   const fin100=gpsActive && gpuProgLap>=0.75
+   for(const tier of ['MELODIC_HOOK','HYPE_STAB','CHOP_STUTTER','AMBIENT_WASH']){
+    if(v3Engine.vocal.shouldTrigger(tier,dv,cad,fin100)){ v3Engine.vocal.trigger(tier,t); break }
+   }
+  }
   const final100 = gpsActive && ((gpuProgLap>=0.75 && gpuProgLap<1) || (elapsedTrack>=0.75*tgt))
   if(pushAmount>1&&final100&&s%16===0) trumpet(t,st.root+36,.45,.52)
   stepEls.forEach((el,i)=>{ el.classList.toggle('active', i===s); el.classList.toggle('on', i%4===0)})
@@ -884,7 +893,7 @@ function drawStepUI(){
 }
 let pushAmount=0, gpuProgLap=0, elapsedTrack=0
 function startAudio(){
- ensureAudio(); if(isPlaying) return; isPlaying=true
+ ensureAudio(); ensureV3(); if(isPlaying) return; isPlaying=true
  delayNode.delayTime.value=60/effectiveBPM/4*3
  nextNote=audioCtx.currentTime+.05; timerID=setInterval(schedule,25)
  $('#metronomeBtn').textContent='🔊 SOUND ON • PLAYING'

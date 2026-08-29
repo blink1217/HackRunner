@@ -106,22 +106,25 @@ class VocalController {
   
   shouldTrigger(tier, splitDelta, cadence, isFinal100m) {
     const now = this.ctx.currentTime;
-    if (now - this.lastTrigger < 2) return false; // min 2s between triggers
-    
+    if (now - this.lastTrigger < 0.9) return false; // min 0.9s between triggers
     if (this.density === 0) return false;
-    
+
     const roll = Math.random();
-    const threshold = this.density * 0.5; // scale probability by density
-    
+    const base = this.density; // full density = full probability
+
     switch (tier) {
       case 'MELODIC_HOOK':
-        return Math.abs(splitDelta) < 2.0 && roll < threshold;
+        // locked-in orbit = prime hook time
+        return Math.abs(splitDelta) < 2.0 && roll < base;
       case 'HYPE_STAB':
-        return (splitDelta < -3.0 || isFinal100m) && roll < threshold * 1.5;
+        // behind pace or final 100m — always aggressive
+        return (splitDelta < -2.5 || isFinal100m) && roll < base;
       case 'CHOP_STUTTER':
-        return cadence > 170 && roll < threshold * 0.7;
+        // high cadence rhythmic chops
+        return cadence > 165 && roll < base * 0.85;
       case 'AMBIENT_WASH':
-        return roll < threshold * 0.3;
+        // warm/cool periods — softer presence
+        return roll < base * 0.35;
       default:
         return false;
     }
@@ -132,58 +135,69 @@ class VocalController {
     const f = this.formants[tier];
     const t = time || this.ctx.currentTime;
     
-    // Glottal source (sawtooth)
+    // Glottal source (sawtooth) with brassy pitch bend at attack
     const src = this.ctx.createOscillator();
     src.type = 'sawtooth';
-    src.frequency.setValueAtTime(f.f0 * 1.1, t);
-    src.frequency.exponentialRampToValueAtTime(f.f0 * 0.95, t + 0.25);
+    src.frequency.setValueAtTime(f.f0 * 1.18, t);
+    src.frequency.exponentialRampToValueAtTime(f.f0 * 1.0, t + 0.06);
+    src.frequency.exponentialRampToValueAtTime(f.f0 * 0.92, t + 0.34);
     
-    // Formant bank (3 parallel bandpass filters)
+    // Formant bank (3 parallel bandpass filters) + presence boost
     const formantNodes = [f.f1, f.f2, f.f3].map((freq, i) => {
       const bp = this.ctx.createBiquadFilter();
       bp.type = 'bandpass';
       bp.frequency.value = freq;
-      bp.Q.value = 10 - i * 2;
+      bp.Q.value = 9 - i * 2;
       const g = this.ctx.createGain();
-      g.gain.value = [1, 0.6, 0.35][i];
+      g.gain.value = [1, 0.62, 0.4][i];
       src.connect(bp);
       bp.connect(g);
       return g;
     });
     
-    // Envelope
+    // Presence filter: carved 1.4-3.5kHz band so vocals cut through the mix
+    const presence = this.ctx.createBiquadFilter();
+    presence.type = 'peaking';
+    presence.frequency.value = 2400;
+    presence.gain.value = 4 + this.density * 4;
+    presence.Q.value = 0.9;
+    
+    // Envelope — louder, longer, clearer
     const env = this.ctx.createGain();
     env.gain.setValueAtTime(0.001, t);
-    env.gain.linearRampToValueAtTime(0.35, t + 0.015);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    env.gain.linearRampToValueAtTime(0.62, t + 0.02);
+    env.gain.setValueAtTime(0.62, t + 0.06);
+    env.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
     
-    formantNodes.forEach(n => n.connect(env));
+    formantNodes.forEach(n => n.connect(presence));
+    presence.connect(env);
     env.connect(this.router.stems.vocal_layer.bus);
     
-    // Breath noise transient
+    // Breath noise transient (wider spectral energy)
     const noise = this.ctx.createBufferSource();
-    const noiseBuf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.03, this.ctx.sampleRate);
+    const noiseBuf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.045, this.ctx.sampleRate);
     const noiseData = noiseBuf.getChannelData(0);
     for (let i = 0; i < noiseData.length; i++) {
-      noiseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / noiseData.length, 2);
+      noiseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / noiseData.length, 1.8);
     }
     noise.buffer = noiseBuf;
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.value = 0.15;
+    noiseGain.gain.value = 0.28;
     const noiseFilter = this.ctx.createBiquadFilter();
-    noiseFilter.type = 'highpass';
-    noiseFilter.frequency.value = 1800;
+    noiseFilter.type = 'bandpass';
+    noiseFilter.frequency.value = 1600;
+    noiseFilter.Q.value = 1.2;
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.router.stems.vocal_layer.bus);
     
     src.start(t);
-    src.stop(t + 0.3);
+    src.stop(t + 0.45);
     noise.start(t);
     
-    // Apply ducking to pads/synths
-    this.router.applyDucking(0.7, t);
-    setTimeout(() => this.router.applyDucking(0, t + 0.15), 150);
+    // Duck pads/synths while vocal is active
+    this.router.applyDucking(0.75, t);
+    setTimeout(() => this.router.applyDucking(0, t + 0.2), 200);
     
     this.activeTier = tier;
     this.lastTrigger = t;
@@ -302,7 +316,7 @@ class AdaptiveDJEngine {
         this.router.setStemGain('sub_mid_bass', 0.3, t);
         this.router.setStemGain('harmonic_pads', 0.7, t);
         this.router.setStemGain('lead_synths', 0.2, t);
-        this.router.setStemGain('vocal_layer', 0.3, t);
+        this.router.setStemGain('vocal_layer', 0.7, t);
         this.router.setStemGain('transition_fx', 0.4, t);
         break;
         
@@ -313,7 +327,7 @@ class AdaptiveDJEngine {
         this.router.setStemGain('sub_mid_bass', 0.8, t);
         this.router.setStemGain('harmonic_pads', 0.6, t);
         this.router.setStemGain('lead_synths', 0.7, t);
-        this.router.setStemGain('vocal_layer', 0.5, t);
+        this.router.setStemGain('vocal_layer', 0.7, t);
         this.router.setStemGain('transition_fx', 0.3, t);
         break;
         
@@ -324,7 +338,7 @@ class AdaptiveDJEngine {
         this.router.setStemGain('sub_mid_bass', 0.9, t);
         this.router.setStemGain('harmonic_pads', 0.5, t);
         this.router.setStemGain('lead_synths', 0.9, t);
-        this.router.setStemGain('vocal_layer', 0.8, t);
+        this.router.setStemGain('vocal_layer', 0.9, t);
         this.router.setStemGain('transition_fx', 0.7, t);
         break;
         
@@ -335,7 +349,7 @@ class AdaptiveDJEngine {
         this.router.setStemGain('sub_mid_bass', 0.2, t);
         this.router.setStemGain('harmonic_pads', 0.9, t);
         this.router.setStemGain('lead_synths', 0.3, t);
-        this.router.setStemGain('vocal_layer', 0.2, t);
+        this.router.setStemGain('vocal_layer', 0.4, t);
         this.router.setStemGain('transition_fx', 0.5, t);
         break;
     }
