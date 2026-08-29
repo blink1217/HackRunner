@@ -657,9 +657,11 @@ function schedule(){
  const beatDur=60/effectiveBPM
  while(nextNote < audioCtx.currentTime+.12){
   const st=currentTrack==='upload'?UPLOAD:TRACKS[currentTrack]
+  if(!st) return
   const s=stepIndex%16, b=Math.floor(stepIndex/16)%4
   const energy = Math.max(0,Math.min(1.2,intensity/100 + (pushAmount>0? .25:0) + (pushAmount<0? -.2:0)))
   const t=nextNote
+  try{
   if(st.softKick){ if(s%4===0) kickSoft(t,.7+.3*energy)} else if(s%4===0) kick(t, .75+.4*energy)
   if(st.hats==='bright'){ if(s%2===1) hat(t,false); if(s===14&&energy>.55) hat(t,true)}
   else if(st.hats==='acid'){ if(s%4===2) hat(t,false,.5); if(s===10&&energy>.6) hat(t,true)}
@@ -687,6 +689,7 @@ function schedule(){
   if(pushAmount>1&&final100&&s%16===0) trumpet(t,st.root+36,.45,.52)
   stepEls.forEach((el,i)=>{ el.classList.toggle('active', i===s); el.classList.toggle('on', i%4===0)})
   const sb=stepbar.children; for(let i=0;i<64;i++) sb[i].classList.toggle('cur', Math.floor(stepIndex/4)===i)
+  }catch(err){ console.warn('schedule step error:',err.message) }
   nextNote += beatDur/4
   stepIndex=(stepIndex+1)%64
   current16=stepIndex
@@ -912,7 +915,7 @@ function selectTrack(id){
  updateSelPanel()
  if(adaptive||liveBPM==null){ setBPMUI(st.bpm); if(isPlaying&&delayNode) delayNode.delayTime.value=60/st.bpm/4*3}
  if(currentTrack==='upload'){ applyMix(); if($('#syncBpm').checked) scheduleRestretch(); if(isPlaying&&mixMode>0) startTrackLoop() }
- else { stopTrackLoop(); if(mixMode>0){ mixMode=0; applyMix() } }
+ else { stopTrackLoop(); stopStemPack(); if(mixMode>0){ mixMode=0; applyMix() } }
 }
 setInterval(()=>{
  const st=djEngine? djEngine.state : (pushAmount>1?'SURGE':pushAmount>0?'BEHIND_PACE':'ON_PACE')
