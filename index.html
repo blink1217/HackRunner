@@ -289,6 +289,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="hrow"><div class="hcell"><small>LAP</small><b id="hudLapCount">0</b><em id="hudLapSub">× 400m</em></div><div class="hcell"><small>SPEED / RUN</small><b id="hudKmh">—</b><em id="hudState">STATIONARY</em></div></div>
 </div>
 
+<script src="PaceBeatDJEngine.js"></script>
 <script>
 const $=s=>document.querySelector(s)
 const midi2freq=m=>440*Math.pow(2,(m-69)/12)
@@ -511,6 +512,7 @@ function tick(){
  else if(deltaSec>0){ ab.textContent='+'+deltaSec.toFixed(1)+'s'; ab.style.color='var(--pink)'; $('#aheadLabel').textContent='behind — push!'; $('#aheadLabel').style.color='var(--pink)'}
  else { ab.textContent=deltaSec.toFixed(1)+'s'; ab.style.color='var(--cyan)'; $('#aheadLabel').textContent='ahead — hold!'; $('#aheadLabel').style.color='var(--cyan)'}
  updateAdaptive()
+ djUpdate()
  hudSync()
 }
 setInterval(tick,60)
@@ -529,7 +531,8 @@ function applyCadence(bpm, src){
  const el=$('#liveDelta'), tgt=parseInt($('#targetBpm').value,10), d=bpm-tgt
  if(Math.abs(d)<=3){ el.textContent='locked ✓'; el.className='delta up'} else if(d<0){ el.textContent=d+' BPM — speed up!'; el.className='delta down'} else { el.textContent='+'+d+' BPM — ease'; el.className='delta up'}
  if(adaptive){ setBPMUI(bpm); scheduleRestretch() }
- ensureAudio(); if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20)
+ ensureAudio(); ensureDJEngine(); if(djEngine) djEngine.start()
+ if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20)
  playPing(800)
 }
 function playPing(f){ const t=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=f; o.type='square'; g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.06); o.connect(g).connect(synthBus); o.start(t); o.stop(t+.08)}
@@ -567,6 +570,7 @@ function triggerLap(){
  tbody.prepend(tr)
  hapticLap(delta<0)
  voiceAnnounce(delta,laps.length)
+ if(djEngine){ djEngine.setRunnerStatus({ deltaSec:delta, isSurging:delta<-1 }); if(delta<-1) djEngine.triggerTrumpetStab() }
  ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
 }
 $('#lapBtn').onclick=triggerLap
@@ -768,6 +772,16 @@ function placeGateDot(pos){
 }
 $('#gpsBtn').onclick=gpsToggle
 let voiceOn=true, hapticOn=true, voicePrimed=false, hapticPrimed=false
+let djEngine=null
+function ensureDJEngine(){
+ if(djEngine||!window.PaceBeatDJEngine) return
+ try{ djEngine=new PaceBeatDJEngine(); djEngine.init() }catch(e){ djEngine=null }
+}
+function djUpdate(){
+ if(!djEngine) return
+ djEngine.updateCadence(liveBPM||targetBPM)
+ djEngine.setRunnerStatus({ deltaSec: pushAmount*3, isSurging: pushAmount>1 })
+}
 function voicePrime(){ if(voicePrimed||!('speechSynthesis' in window)) return; speechSynthesis.getVoices(); voicePrimed=true }
 function voiceAnnounce(delta,lap){
  if(!voiceOn||!('speechSynthesis' in window)) return
