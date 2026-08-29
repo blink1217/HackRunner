@@ -139,6 +139,17 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .sp-files .spf{display:flex;gap:6px;align-items:center}
 .sp-files .spf .role{font-size:9px;padding:1px 6px;border-radius:10px;background:#141a00;color:var(--acid);border:1px solid rgba(204,255,0,.3);letter-spacing:.06em}
 .sp-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* V3 Adaptive DJ Engine matrix */
+.v3-matrix{margin:0 12px 12px;background:linear-gradient(135deg,#0a0a14,#0f0f0f);border:1px solid #2a2a4a;border-radius:12px;padding:10px 12px;display:grid;gap:8px}
+.v3-head{font-size:10px;letter-spacing:.1em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.v3-head b{color:var(--cyan)}
+.v3-stems{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.v3-stem{display:flex;flex-direction:column;gap:3px;align-items:center}
+.v3-stem .meter{width:100%;height:38px;background:#111;border-radius:4px;position:relative;overflow:hidden;display:flex;align-items:flex-end}
+.v3-stem .meter i{display:block;width:100%;background:var(--cyan);height:8%;transition:height .1s;border-radius:0 0 4px 4px}
+.v3-stem .meter i.hot{background:var(--pink)}
+.v3-stem small{font-size:7px;letter-spacing:.05em;opacity:.55;text-transform:uppercase}
+.v3-row{display:flex;gap:8px;align-items:center}
 </style>
 </head>
 <body>
@@ -190,6 +201,12 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">INTENSITY</span><input type="range" id="intensity" min="0" max="100" value="65"><b class="mono" id="intensityVal" style="min-width:42px;text-align:right">65%</b></div>
 <div class="mix-row" id="mixRow"><button data-mix="0" class="active">♫ SYNTH</button><button data-mix="1">SYNTH + TRACK</button><button data-mix="2">TRACK ONLY</button></div>
 <div class="stem-row" id="stemRow"><button data-stem="bass" class="on">BASS</button><button data-stem="perc" class="on">PERC</button><button data-stem="pad" class="on">PAD</button><button data-stem="horn" class="on">HORN</button><button data-stem="vocal" class="on">VOCAL</button></div>
+<div class="v3-matrix" id="v3Matrix">
+<div class="v3-head"><b>◈ ADAPTIVE DJ ENGINE V3</b><span id="v3State" style="color:var(--acid)">WARMUP</span></div>
+<div class="v3-stems" id="v3Stems"></div>
+<div class="v3-row"><span style="font-size:9px;letter-spacing:.1em;opacity:.6">ENERGY</span><div class="v3-gauge"><i id="v3Energy"></i></div><b class="mono" id="v3EnergyVal" style="font-size:11px">0%</b></div>
+<div class="v3-row"><span style="font-size:9px;letter-spacing:.1em;opacity:.6">VOCALS</span><input type="range" id="vocalDensity" min="0" max="100" value="40" style="flex:1;accent-color:var(--pink)"><b class="mono" id="vocalDensityVal" style="font-size:11px;min-width:70px;text-align:right">STANDARD 40%</b></div>
+</div>
 <div class="stem-pack" id="stemPack">
 <div class="sp-head"><b>◈ STEM PACK LOADER</b><span style="opacity:.6">— Envato "Includes Stems" packs: download stems → load here</span></div>
 <div class="sp-files" id="spFiles"><span style="opacity:.4;font-size:11px">No stems loaded. Load drums.wav / bass.wav / vocals.wav / melody.wav together.</span></div>
@@ -301,6 +318,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 
 <script src="PaceBeatDJEngine.js"></script>
+<script src="PaceBeatV3.js"></script>
 <script>
 const $=s=>document.querySelector(s)
 const midi2freq=m=>440*Math.pow(2,(m-69)/12)
@@ -524,7 +542,9 @@ function tick(){
  else if(deltaSec>0){ ab.textContent='+'+deltaSec.toFixed(1)+'s'; ab.style.color='var(--pink)'; $('#aheadLabel').textContent='behind — push!'; $('#aheadLabel').style.color='var(--pink)'}
  else { ab.textContent=deltaSec.toFixed(1)+'s'; ab.style.color='var(--cyan)'; $('#aheadLabel').textContent='ahead — hold!'; $('#aheadLabel').style.color='var(--cyan)'}
  updateAdaptive()
+ ensureV3()
  djUpdate()
+ v3Update()
  hudSync()
 }
 setInterval(tick,60)
@@ -794,7 +814,12 @@ $('#spLoadBtn').onclick=()=>$('#spInput').click()
 $('#spInput').onchange=e=>{ if(e.target.files.length) loadStemFiles([...e.target.files]) }
 $('#spPlayBtn').onclick=()=>{ stemPack.playing? stopStemPack() : playStemPack() }
 $('#spBpm').onchange=()=>updateStemRates()
-$('#spSync').onchange=()=>updateStemRates()
+ $('#spSync').onchange=()=>updateStemRates()
+$('#vocalDensity').addEventListener('input',e=>{
+ const v=parseInt(e.target.value,10)
+ $('#vocalDensityVal').textContent= v===0?'OFF': v<25?'LOW '+v+'%': v<65?'STANDARD '+v+'%':'FESTIVAL '+v+'%'
+ if(v3Engine) v3Engine.vocal.setDensity(v/100)
+})
 function timeStretch(buf, ratio){
  if(Math.abs(ratio-1)<0.01) return buf
  const sr=buf.sampleRate
@@ -941,6 +966,47 @@ let djEngine=null
 function ensureDJEngine(){
  if(djEngine||typeof PaceBeatDJEngine==='undefined') return
  try{ djEngine=new PaceBeatDJEngine(); djEngine.init() }catch(e){ djEngine=null }
+}
+let v3Engine=null
+function ensureV3(){
+ if(v3Engine||typeof AdaptiveDJEngine==='undefined'||!audioCtx) return
+ try{
+  v3Engine=new AdaptiveDJEngine(audioCtx)
+  buildV3Matrix()
+ }catch(e){ v3Engine=null }
+}
+function buildV3Matrix(){
+ const holder=$('#v3Stems'); if(!holder||holder.children.length) return
+ const names=['KICK','SNARE','TOPS','BASS','PADS','SYNTH','VOCAL','FX']
+ names.forEach(n=>{
+  const d=document.createElement('div'); d.className='v3-stem'
+  d.innerHTML='<div class="meter"><i></i></div><small>'+n+'</small>'
+  holder.appendChild(d)
+ })
+}
+function v3Update(){
+ if(!v3Engine) return
+ const tgt=getTargetSec(), prog=Math.min((Date.now()-lapStart)/1000/tgt,1)
+ const delta=isRunning? (Date.now()-lapStart)/1000-tgt*prog : 0
+ const speed=gpsActive? gpsSpeed : (liveBPM? liveBPM/60*0.95:0)
+ const cad=liveBPM||targetBPM
+ v3Engine.updateTelemetry(delta,cad,(gpsActive&&gpuProgLap>=0.75),speed)
+ v3Engine.onStep(stepIndex%16, Math.floor(stepIndex/16)%4)
+ // meters
+ const names=['kick','snare_clap','percussion_tops','sub_mid_bass','harmonic_pads','lead_synths','vocal_layer','transition_fx']
+ names.forEach((n,i)=>{
+  const el=$('#v3Stems').children[i]
+  if(!el) return
+  const g=v3Engine.router.stems[n].bus.gain.value*100
+  const bar=el.querySelector('.meter i')
+  bar.style.height=Math.max(6,Math.min(100,g))+'%'
+  bar.className=g>75?'hot':''
+ })
+ const energy=Math.round(v3Engine.getMixEnergy())
+ $('#v3Energy').style.width=energy+'%'
+ $('#v3EnergyVal').textContent=energy+'%'
+ $('#v3State').textContent=v3Engine.getArrangementState()
+ $('#v3State').style.color=v3Engine.state==='APEX'?'var(--pink)':v3Engine.state==='DRIVE'?'var(--acid)':'var(--cyan)'
 }
 function djUpdate(){
  if(!djEngine) return
