@@ -181,6 +181,15 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .stem-row button{flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#0f0f0f;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
 .stem-row button.on{border-color:var(--acid);background:#141a00;color:var(--acid)}
 .stem-pack{margin:0 12px 12px;background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:10px 12px;display:grid;gap:8px}
+/* recovery lab */
+.rec-ring{width:74px;height:74px;border-radius:50%;background:conic-gradient(var(--acid) 0deg,#222 0deg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rec-ring-in{width:58px;height:58px;border-radius:50%;background:#0f0f0f;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rec-ring-in b{font-family:'Bebas Neue';font-size:24px;line-height:1;color:var(--acid)}
+.rec-ring-in small{font-size:7px;letter-spacing:.1em;opacity:.5}
+.breath-wrap{display:grid;gap:6px;justify-items:center;padding:8px;background:#0f0f0f;border:1px solid #222;border-radius:12px}
+.breath-ring{width:64px;height:64px;border-radius:50%;border:3px solid var(--cyan);display:flex;align-items:center;justify-content:center;transition:transform 1s linear, border-color 1s}
+.breath-ring.in{transform:scale(1.18);border-color:var(--acid)}
+.breath-ring span{font-size:8px;letter-spacing:.12em;opacity:.7}
 .sp-head{font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .sp-head b{color:var(--acid)}
 .sp-files{display:flex;flex-direction:column;gap:3px;font-size:11px;font-family:'JetBrains Mono'}
@@ -333,6 +342,32 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 
 <div class="card">
+<div class="card-h"><span>◉ Recovery Lab</span><span class="badge" id="recBadge" style="background:#333;color:#fff">ACTIVE</span></div>
+<div style="padding:14px;display:grid;gap:10px">
+<div style="display:flex;gap:10px;align-items:center">
+<div class="rec-ring" id="recRing"><div class="rec-ring-in"><b id="recScore">—</b><small>READY</small></div></div>
+<div style="flex:1;display:grid;gap:6px">
+<div class="kpi" style="grid-template-columns:1fr 1fr 1fr">
+<div><label>HR</label><b id="recHr" style="font-size:18px">—</b></div>
+<div><label>RMSSD</label><b id="recRmssd" style="font-size:18px">—</b></div>
+<div><label>Decay</label><b id="recDecay" style="font-size:18px">—</b></div>
+</div>
+<div style="font-size:10px;opacity:.6" id="recAdvice">Pair a BLE heart-rate monitor for live HRV.</div>
+</div>
+</div>
+<div class="breath-wrap" id="breathWrap" style="display:none">
+<div class="breath-ring" id="breathRing"><span id="breathLabel">BREATHE</span></div>
+<div style="font-size:10px;opacity:.6">Resonance pacer · 6 breaths/min · maximises vagal tone (RMSSD↑)</div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-ghost" id="saunaBtn" style="padding:10px;font-size:11px;flex:1">🔥 SAUNA 15 MIN</button>
+<button class="btn btn-ghost" id="recMusicBtn" style="padding:10px;font-size:9px;flex:1">♪ RECOVERY MUSIC AUTO</button>
+</div>
+<div style="font-size:9px;opacity:.45;line-height:1.5" class="kal">SCIENCE: arXiv 2509.17112 (RISE) · Frontiers Psychol. 2026 meta-analysis (music↑HRV) · Jeong 2024 (slow tempo post-exercise ↓HR) · 6/min resonance breathing → vagal tone. With <b style="color:var(--acid)">Healf</b>: hydrate + electrolytes post-session.</div>
+</div>
+</div>
+
+<div class="card">
 <div class="card-h"><span>Splits &amp; Ghost</span><span class="badge" style="background:var(--cyan);color:#000">SPLITCLASH</span></div>
 <div class="splits"><table><thead><tr><th>LAP</th><th>DIST</th><th>SPLIT</th><th>TARGET</th><th>Δ</th></tr></thead><tbody id="splitsBody"><tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — 100m / 200m / 400m</td></tr></tbody></table></div>
 <div style="padding:0 14px 14px;display:flex;gap:8px">
@@ -366,6 +401,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 
 <script src="PaceBeatDJEngine.js?v=3"></script>
 <script src="PaceBeatV3.js?v=3"></script>
+<script src="PaceBeatRecovery.js?v=3"></script>
 <script>
 const $=s=>document.querySelector(s)
 const midi2freq=m=>440*Math.pow(2,(m-69)/12)
@@ -862,6 +898,64 @@ $('#spInput').onchange=e=>{ if(e.target.files.length) loadStemFiles([...e.target
 $('#spPlayBtn').onclick=()=>{ stemPack.playing? stopStemPack() : playStemPack() }
 $('#spBpm').onchange=()=>updateStemRates()
  $('#spSync').onchange=()=>updateStemRates()
+// ===== RECOVERY LAB =====
+let recoveryEngine=null, recoveryMusic=null, recoveryMusicMode='auto', lastBreathPhase=null
+function ensureRecovery(){
+ if(recoveryEngine) return
+ try{
+  recoveryEngine=new RecoveryEngine()
+  recoveryEngine.onStateChange=(s,sum)=>{ if(s==='COOLDOWN'||s==='DEEP_RECOVERY') voiceAnnounce('Recovery mode. Heart rate '+Math.round(sum.hr||0)) }
+  recoveryMusic=new RecoveryMusic(audioCtx, synthBus)
+ }catch(e){ recoveryEngine=null }
+}
+setInterval(()=>{
+ if(!recoveryEngine) return
+ const hr=bleHr|| (bleHrAt&&Date.now()-bleHrAt<8000? bleHr: (gpsActive&&gpsRunningState==='RUNNING'? Math.round(gpsSpeed*10+100):null))
+ const sum=recoveryEngine.update(hr, isRunning&&gpsSpeed>2, gpsSpeed)
+ // auto recovery music
+ if(recoveryMusic){
+  const want= recoveryMusicMode==='auto' ? (recoveryEngine.state==='COOLDOWN'||recoveryEngine.state==='DEEP_RECOVERY'||recoveryEngine.state==='SAUNA') : recoveryMusicMode==='on'
+  if(want && !recoveryMusic.playing && audioCtx){ ensureAudio(); recoveryMusic.start() }
+  if(!want && recoveryMusic.playing) recoveryMusic.stop()
+ }
+ // UI
+ const badge=$('#recBadge')
+ badge.textContent= sum.state==='SAUNA'?'SAUNA '+Math.ceil(recoveryEngine.saunaRemaining())+' MIN':sum.state
+ const col={ACTIVE:'#333',COOLDOWN:'var(--pink)',DEEP_RECOVERY:'var(--cyan)',READY:'var(--acid)',SAUNA:'var(--orange, #FF7A00)'}[sum.state]
+ badge.style.background=col; badge.style.color= sum.state==='ACTIVE'?'#fff':'#000'
+ const score=sum.readiness||0
+ $('#recScore').textContent=bleHr||sum.hr? score:'—'
+ $('#recRing').style.background='conic-gradient(var(--acid) '+(score*3.6)+'deg,#222 0deg)'
+ $('#recHr').textContent= sum.hr? Math.round(sum.hr):'—'
+ $('#recRmssd').textContent= sum.rmssd? Math.round(sum.rmssd):'—'
+ $('#recDecay').textContent= sum.decay? sum.decay.toFixed(1):'—'
+ $('#recAdvice').textContent= sum.state==='ACTIVE'? 'Finish your set — recovery protocol starts on stop.'
+  : sum.state==='COOLDOWN'? 'Walk it off. Slow ambient music engaged — HR dropping '+ (sum.decay? sum.decay.toFixed(1):'…')+' bpm/min.'
+  : sum.state==='DEEP_RECOVERY'? 'Breathe with the pacer at 6/min. Sauna when HR < 100. Hydrate (Healf).'
+  : sum.state==='SAUNA'? 'Contrast therapy in progress — exit if HR exceeds 130.'
+  : 'RECOVERED ✓ RMSSD '+Math.round(sum.rmssd||0)+' ms · readiness '+score+'%. refuel (Healf).'
+ // breathing pacer
+ const bw=$('#breathWrap')
+ if(sum.state==='DEEP_RECOVERY'||sum.state==='SAUNA'){
+  bw.style.display='grid'
+  const v=recoveryEngine.breath.value(Date.now())
+  const inhaling=recoveryEngine.breath.inhaling(Date.now())
+  const ring=$('#breathRing')
+  ring.style.transform='scale('+(0.85+v*0.35)+')'
+  ring.classList.toggle('in', inhaling)
+  const lbl=$('#breathLabel')
+  if(inhaling!==lastBreathPhase){ lbl.textContent=inhaling?'INHALE':'EXHALE'; lastBreathPhase=inhaling; if(navigator.vibrate&&hapticOn) navigator.vibrate(inhaling?30:20) }
+ } else bw.style.display='none'
+},500)
+$('#saunaBtn').onclick=()=>{
+ ensureRecovery()
+ if(recoveryEngine.sauna){ recoveryEngine.endSauna(recoveryEngine.hrv.hrAvg); $('#saunaBtn').textContent='🔥 SAUNA 15 MIN'; $('#saunaBtn').classList.remove('playing') }
+ else { recoveryEngine.startSauna(15); $('#saunaBtn').textContent='⏹ END SAUNA'; $('#saunaBtn').classList.add('playing'); ensureAudio(); if(!isPlaying) startAudio() }
+}
+$('#recMusicBtn').onclick=()=>{
+ recoveryMusicMode= recoveryMusicMode==='auto'? 'on' : recoveryMusicMode==='on'? 'off':'auto'
+ $('#recMusicBtn').textContent='♪ RECOVERY MUSIC '+recoveryMusicMode.toUpperCase()
+}
 $('#vocalDensity').addEventListener('input',e=>{
  const v=parseInt(e.target.value,10)
  $('#vocalDensityVal').textContent= v===0?'OFF': v<25?'LOW '+v+'%': v<65?'STANDARD '+v+'%':'FESTIVAL '+v+'%'
@@ -1105,8 +1199,11 @@ function bleSetup(btnId, svc, chr, onVal, onErr){
 }
 bleSetup('hrmBtn','heart_rate','heart_rate_measurement',val=>{
  const flags=val.getUint8(0), is16=(flags&1)===1, hr=is16?val.getUint16(1,true):val.getUint8(1)
+ let rr=null
+ if(flags&0x10){ const o=is16?3:2; if(val.byteLength>=o+2) rr=val.getUint16(o,true)*(1000/1024) }
  bleHr=hr; bleHrAt=Date.now()
- $('#hrVal').innerHTML=hr+' <small>BPM</small>'; $('#hrNote').textContent='BLE ✓'
+ if(recoveryEngine && rr) recoveryEngine.hrv.push(hr, rr)
+ $('#hrVal').innerHTML=hr+' <small>BPM</small>'; $('#hrNote').textContent='BLE ✓'+(rr?' · R-R ✓':'')
 }, ()=>{$('#hrNote').textContent='pair failed'})
 bleSetup('podBtn','running_speed_and_cadence','rsc_measurement',val=>{
  let n=1
