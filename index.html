@@ -396,6 +396,9 @@ body{ font-size: var(--fs-base) }
 /* smooth breakpoint transitions */
 .card, .btn, .pill, .stat{ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) }
 
+/* audio must survive fold/unfold — nothing pauses the AudioContext on resize */
+/* (browsers may suspend on visibilitychange only; fold keeps the tab visible) */
+
 /* orientation-aware layouts */
 @media (orientation: landscape) and (max-height: 500px){
   .wrap{ grid-template-columns: 1fr }
@@ -453,6 +456,38 @@ body{ font-size: var(--fs-base) }
 @media (min-width: 280px) and (max-width: 653px) and (orientation: portrait){
   .wrap{ grid-template-columns: 1fr }
 }
+
+/* ===== FOLDABLE DEVICES ===== */
+/* device modes set by JS: mode-cover (folded) / mode-inner (unfolded) / mode-desktop */
+/* smooth fold/unfold morphs */
+.wrap, .card, .btn, .pill, .footer, #mobileBar{ transition: grid-template-columns .35s cubic-bezier(.4,0,.2,1), padding .35s cubic-bezier(.4,0,.2,1) }
+
+/* UNFOLDED inner display: 480-820px — tablet-class, two columns, no bottom bar */
+.mode-inner .wrap{ grid-template-columns: 1.15fr .85fr }
+.mode-inner #mobileBar{ display:none !important }
+.mode-inner body{ padding-bottom: var(--safe-b) }
+.mode-inner .card{ margin-bottom: var(--sp-sm) }
+.mode-inner .card.collapsed > *:not(.card-h){ display:'' } /* JS also re-expands */
+.mode-inner .btn{ min-height:44px }  /* still a touch screen */
+.mode-inner .pill{ min-height:44px }
+.mode-inner .tap{ min-height:56px }
+.mode-inner .beat-grid, .mode-inner .stepbar{ display:grid } /* restore visuals */
+.mode-inner .stepbar{ display:flex }
+.mode-inner footer{ flex-wrap:wrap }
+
+/* hinge avoidance: if the browser reports two viewport segments (Samsung Internet),
+   pad the gap so content never sits on the crease */
+@supports (padding: env(viewport-segment-left 0 0, 0px)){
+  .mode-inner .wrap{
+    padding-left: max(var(--sp-md), env(viewport-segment-left 0 0, 0px));
+    padding-right: max(var(--sp-md), env(viewport-segment-right 0 0, 0px));
+  }
+  body.has-hinge .wrap{ gap: max(var(--sp-md), env(viewport-segment-width 0 0, 0px)) }
+}
+
+/* cover display: single column, always (belt + braces with the JS class) */
+.mode-cover .wrap{ grid-template-columns: 1fr }
+.mode-cover .beat-grid, .mode-cover .stepbar{ display:none }
 
 /* reduced motion respect */
 @media(prefers-reduced-motion:reduce){
@@ -1553,28 +1588,62 @@ $('#mbLap').onclick=()=>{ triggerLap(); if(navigator.vibrate) navigator.vibrate(
 $('#mbHud').onclick=()=>{ $('#hud').classList.add('on'); ensureAudio(); if(!isPlaying) startAudio() }
 // ===== MOBILE CARD COLLAPSE (tap header to fold) =====
 (function(){
- if(!matchMedia('(max-width:820px)').matches) return
- const keep=['400m Track Engine'] // keep primary card always open
- document.querySelectorAll('.card').forEach(card=>{
-  const h=card.querySelector('.card-h'); if(!h||keep.some(k=>h.textContent.includes(k))) return
-  h.style.cursor='pointer'; h.style.userSelect='none'
-  const arrow=document.createElement('span'); arrow.textContent='▾'; arrow.style.opacity='.5'
-  h.appendChild(arrow)
-  h.addEventListener('click',e=>{
-   if(e.target.closest('button,input,label,a')) return
-   const body=[...card.children].filter(el=>el!==h)
-   const open=card.classList.toggle('collapsed')
-   arrow.textContent=open?'▸':'▾'
-   body.forEach(el=>{ el.style.display=open?'none':'' })
+ let collapseInit=false
+ const keep=['400m Track Engine','Recovery Lab']
+ const secNames=['Cadence','Motion Tracker','Splits']
+
+ function initCollapse(){
+  if(collapseInit) return
+  collapseInit=true
+  document.querySelectorAll('.card').forEach(card=>{
+   const h=card.querySelector('.card-h'); if(!h||keep.some(k=>h.textContent.includes(k))) return
+   h.style.cursor='pointer'; h.style.userSelect='none'
+   const arrow=document.createElement('span'); arrow.textContent='▾'; arrow.style.opacity='.5'
+   h.appendChild(arrow)
+   h.addEventListener('click',e=>{
+    if(e.target.closest('button,input,label,a')) return
+    setCollapsed(card, card.classList.contains('collapsed')?false:true, arrow)
+   })
   })
- })
- // auto-collapse dense secondary cards on load
- ;['Cadence','Motion Tracker','Splits','Recovery Lab'].forEach(name=>{
-  document.querySelectorAll('.card .card-h').forEach(h=>{
-   if(h.textContent.includes(name)) h.click()
-  })
- })
-})()
+ }
+ function setCollapsed(card,collapsed,arrow){
+  const h=card.querySelector('.card-h'); const arrowEl=arrow||h.querySelector('span:last-child')
+  card.classList.toggle('collapsed',collapsed)
+  if(arrowEl) arrowEl.textContent=collapsed?'▸':'▾'
+  ;[...card.children].forEach(el=>{ if(el!==h) el.style.display=collapsed?'none':'' })
+ }
+ function applyMode(){
+  const w=window.innerWidth
+  const body=document.body
+  body.classList.remove('mode-cover','mode-inner','mode-desktop')
+  if(w<=480) body.classList.add('mode-cover')
+  else if(w<=820) body.classList.add('mode-inner')
+  else body.classList.add('mode-desktop')
+  // hinge detection (Samsung Internet viewport segments)
+  try{
+   const seg=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--_seg')||'0')
+   body.classList.toggle('has-hinge', !!seg)
+  }catch(e){}
+  // re-evaluate card collapse for the new mode
+  if(body.classList.contains('mode-inner')||body.classList.contains('mode-desktop')){
+   // expanded screens: show everything
+   document.querySelectorAll('.card.collapsed').forEach(c=>setCollapsed(c,false))
+  } else if(body.classList.contains('mode-cover')){
+   // folded: re-collapse secondary cards
+   document.querySelectorAll('.card .card-h').forEach(h=>{
+    if(secNames.some(n=>h.textContent.includes(n))) setCollapsed(h.closest('.card'),true)
+   })
+  }
+ }
+ initCollapse()
+ applyMode()
+ // fold/unfold fires resize + visualViewport.resize — handle both, debounced
+ let _dt=null
+ const onResize=()=>{ clearTimeout(_dt); _dt=setTimeout(applyMode,120) }
+ window.addEventListener('resize',onResize)
+ if(window.visualViewport) window.visualViewport.addEventListener('resize',onResize)
+ if(window.screen && window.screen.addEventListener) try{ screen.orientation.addEventListener('change',onResize) }catch(e){}
+})();
 </script>
 </body>
 </html>
