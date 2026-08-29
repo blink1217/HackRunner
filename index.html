@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--acid:#CCFF00;--pink:#FF2E93;--cyan:#00FFE0;--black:#0A0A0A;--gray:#1A1A1A}
+:root{--acid:#CCFF00;--pink:#FF2E93;--cyan:#00FFE0;--orange:#FF7A00;--black:#0A0A0A;--gray:#1A1A1A}
 body{background:var(--black);color:#fff;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
 .mono{font-family:'JetBrains Mono',monospace}
 .bebas{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}
@@ -29,6 +29,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;letter-spacing:.06em}
 .badge-acid{background:var(--acid);color:#000}
 .badge-pink{background:var(--pink);color:#fff}
+.badge-cyan{background:var(--cyan);color:#000}
 .track-wrap{padding:18px;display:flex;flex-direction:column;align-items:center}
 .track-svg{width:280px;height:160px}
 .lap-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:14px}
@@ -40,10 +41,9 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),var(--cyan));width:0%;transition:width .2s}
 .controls{padding:14px;display:grid;gap:12px}
 .row{display:flex;gap:10px}
-.btn{flex:1;padding:14px;border-radius:12px;border:none;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-size:14px;transition:.12s}
+.btn{flex:1;padding:14px;border-radius:12px;border:none;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-size:14px;transition:.12s;font-family:'Space Grotesk',sans-serif}
 .btn:active{transform:scale(.98)}
 .btn-go{background:var(--acid);color:#000}
-.btn-go.playing{background:#fff}
 .btn-lap{background:var(--pink);color:#fff}
 .btn-ghost{background:#222;color:#fff;border:1px solid #333}
 .btn-ghost:disabled{opacity:.35}
@@ -70,15 +70,38 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .pill-good{background:rgba(204,255,0,.15);color:var(--acid);border:1px solid rgba(204,255,0,.3)}
 .pill-bad{background:rgba(255,46,147,.15);color:var(--pink);border:1px solid rgba(255,46,147,.3)}
 .viz{height:64px;display:flex;align-items:center;gap:2px;padding:0 12px}
-.viz i{flex:1;background:var(--acid);border-radius:2px;min-height:4px;transition:height .08s}
+.viz i{flex:1;background:var(--acid);border-radius:2px;min-height:4px;transition:height .05s}
 .footer{max-width:1100px;margin:0 auto;padding:10px 16px 20px;display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid #2a2a2a;padding:6px 10px;border-radius:999px;opacity:.7}
+/* track selector */
+.tracks{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px}
+@media(max-width:480px){.tracks{grid-template-columns:1fr}}
+.track-btn{background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;padding:12px;text-align:left;cursor:pointer;transition:.12s;color:#fff;font-family:'Space Grotesk',sans-serif}
+.track-btn:hover{border-color:#444;background:#151515}
+.track-btn.active{border-color:var(--acid);background:linear-gradient(135deg,#1a2000,#101010);box-shadow:0 0 12px rgba(204,255,0,.15)}
+.track-btn .tname{font-family:'Bebas Neue';font-size:17px;letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center}
+.track-btn .tname .tnum{font-size:10px;opacity:.4;font-family:'JetBrains Mono'}
+.track-btn .tmeta{font-size:10px;opacity:.55;margin-top:3px;letter-spacing:.05em}
+.track-btn .tbar{height:3px;border-radius:2px;margin-top:8px;background:#222;overflow:hidden}
+.track-btn .tbar i{display:block;height:100%;width:0%;background:var(--acid);transition:width .2s}
+.track-btn.active .tbar i{width:100%}
+.track-btn.playing .tname b{color:var(--acid)}
+.upload-row{display:flex;gap:8px;padding:0 12px 12px;align-items:center}
+.upload-row button{flex:1;padding:12px;border-radius:12px;border:2px dashed #444;background:#0f0f0f;color:#fff;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-size:12px}
+.upload-row button:hover{border-color:var(--acid)}
+.upload-row .ufile{flex:1.6;font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.analyzer{display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap}
+.an-chip{font-size:10px;padding:5px 10px;border-radius:20px;background:#0f0f0f;border:1px solid #2a2a2a;letter-spacing:.06em;text-transform:uppercase}
+.an-chip b{color:var(--acid)}
+.stepbar{display:flex;gap:1px;padding:0 12px 12px;height:14px}
+.stepbar i{flex:1;background:#222;border-radius:1px}
+.stepbar i.cur{background:var(--acid)}
 </style>
 </head>
 <body>
 <div class="topbar"><span>⚡ The Running Hackathon — London Marathon Community Track • 10:30–20:30 BST</span><span>Crazy Filter Theme</span></div>
 <header>
-<div><div class="logo bebas"><b>PACE</b>BEAT <span style="font-size:13px;vertical-align:super;background:var(--pink);color:#fff;padding:2px 6px;border-radius:4px">DJ-CADENCE</span></div><div class="tag">Live Adaptive Audio Pacer • 400m Ghost Racing</div></div>
+<div><div class="logo bebas"><b>PACE</b>BEAT <span style="font-size:13px;vertical-align:super;background:var(--pink);color:#fff;padding:2px 6px;border-radius:4px">DJ-CADENCE</span></div><div class="tag">Generative Audio Pacer • Matches Your Track • 400m Ghost</div></div>
 <div class="hdr-right"><div>TAG • Luke Balabanovic & Siena Kinsale</div><div class="live"><span class="dot"></span> LIVE ON TRACK</div><div style="font-size:10px;opacity:.4;margin-top:2px">Healf • Sauna • Live DJ + Trumpet</div></div>
 </header>
 
@@ -100,7 +123,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div style="display:flex;justify-content:space-between;width:100%;font-size:10px;letter-spacing:.1em;opacity:.5"><span>START</span><span id="distLabel">0 / 400m</span><span>FINISH</span></div>
 <div class="lap-stats">
 <div class="stat"><label>Lap</label><b id="lapCount" class="bebas">0</b><small id="lapSub">press START</small></div>
-<div class="stat"><label>Split</label><b id="splitTime" class="bebas">00:00</b><small id="splitDelta" style="color:var(--acid)">— target 01:30</small></div>
+<div class="stat"><label>Split</label><b id="splitTime" class="bebas">00:00</b><small id="splitDelta">— target 01:30</small></div>
 <div class="stat"><label>Behind / Ahead</label><b id="aheadBehind" class="bebas" style="color:var(--acid)">±0.0s</b><small id="aheadLabel">on pace</small></div>
 </div>
 </div>
@@ -112,33 +135,48 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 
 <div class="card">
-<div class="card-h"><span>♫ GENERATIVE BEAT ENGINE</span><span class="badge badge-pink" id="bpmBadge">120 BPM</span></div>
-<div style="padding:12px 14px 0" class="viz" id="viz"></div>
+<div class="card-h"><span>♫ GENERATIVE ENGINE</span><span class="badge badge-pink" id="bpmBadge">127 BPM • READY</span></div>
+<div class="viz" id="viz"></div>
+<div class="stepbar" id="stepbar"></div>
 <div class="beat-grid" id="grid"></div>
 <div class="controls">
-<div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TARGET BPM</span><input type="range" id="targetBpm" min="120" max="200" value="170"><b class="mono" id="targetBpmVal" style="min-width:42px;text-align:right">170</b></div>
+<div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TARGET BPM</span><input type="range" id="targetBpm" min="100" max="210" value="127"><b class="mono" id="targetBpmVal" style="min-width:42px;text-align:right">127</b></div>
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TRACK PACE</span><input type="range" id="targetPace" min="60" max="240" value="90"><b class="mono" id="targetPaceVal" style="min-width:52px;text-align:right">1:30</b><span class="mono" style="font-size:10px;opacity:.5">/400m</span></div>
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">INTENSITY</span><input type="range" id="intensity" min="0" max="100" value="65"><b class="mono" id="intensityVal" style="min-width:42px;text-align:right">65%</b></div>
-<label style="display:flex;gap:8px;align-items:center;font-size:12px"><input type="checkbox" id="adaptive" checked> <b>Adaptive</b> <span style="opacity:.6">— auto-shift BPM when you're off split</span></label>
-</div>
+<label style="display:flex;gap:8px;align-items:center;font-size:12px"><input type="checkbox" id="adaptive" checked> <b>Adaptive</b> <span style="opacity:.6">— auto-shift BPM + layers when you're off split</span></label>
 </div>
 </div>
 
-<div style="display:flex;flex-direction:column;gap:16px">
 <div class="card">
 <div class="card-h"><span>◉ CADENCE</span><span class="badge" style="background:#222;color:#fff;border:1px solid #333" id="cadBadge">TAP OR MOTION</span></div>
 <div style="padding:14px;display:grid;gap:10px">
 <div class="kpi">
 <div><label>Live Cadence</label><b id="liveBpm">— <small>BPM</small></b><div class="delta" id="liveDelta">tap to calibrate</div></div>
-<div><label>Target Cadence</label><b id="tgtBpm2">170 <small>BPM</small></b><div class="delta up" id="paceAdvice">LOCK IN 🔒</div></div>
+<div><label>Track Tempo</label><b id="tgtBpm2">127 <small>BPM</small></b><div class="delta up" id="paceAdvice">LOCK IN 🔒</div></div>
 </div>
 <button class="tap" id="tapBtn">◆ TAP TO CADENCE — hit on each step</button>
 <div style="display:flex;gap:8px">
 <button class="btn btn-ghost" id="motionBtn" style="padding:10px;font-size:11px">ENABLE MOTION SENSOR</button>
 <button class="btn btn-ghost" id="metronomeBtn" style="padding:10px;font-size:11px">🔊 SOUND ON</button>
 </div>
-<div style="font-size:11px;opacity:.5;line-height:1.5">Tip for demo: put phone in pocket and run 20m — motion sensor auto-detects steps. Or tap with thumb. Beat shifts <b style="color:var(--acid)">faster + brighter</b> when behind target split.</div>
+<div style="font-size:11px;opacity:.5;line-height:1.5">Demo: phone in pocket → 20m jog = auto cadence. Beat + layers shift <b style="color:var(--acid)">faster &amp; harder</b> when behind split — <b style="color:var(--pink)">trumpet calls</b> when you surge.</div>
 </div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="card">
+<div class="card-h"><span>◈ TRACK SELECTOR</span><span class="badge badge-cyan" id="trackBadge">TECH HOUSE — F</span></div>
+<div class="tracks" id="tracks">
+<button class="track-btn active" data-track="fhouse"><div class="tname"><b>TECH HOUSE — F</b><span class="tnum">01</span></div><div class="tmeta">127 BPM • F MAJOR • 4-FLOOR • MATCHES YOUR TRACK</div><div class="tbar"><i></i></div></button>
+<button class="track-btn" data-track="acid"><div class="tname"><b>ACID 303</b><span class="tnum">02</span></div><div class="tmeta">129 BPM • F MINOR • RESONANT SQUELCH</div><div class="tbar"><i></i></div></button>
+<button class="track-btn" data-track="deep"><div class="tname"><b>MELODIC DEEP</b><span class="tnum">03</span></div><div class="tmeta">124 BPM • A MINOR • PADS + PLUCK ARP</div><div class="tbar"><i></i></div></button>
+<button class="track-btn" data-track="afro"><div class="tname"><b>AFRO HOUSE</b><span class="tnum">04</span></div><div class="tmeta">122 BPM • D MINOR • CONGA + HORN CALLS</div><div class="tbar"><i></i></div></button>
+<button class="track-btn" data-track="upload"><div class="tname"><b>YOUR TRACK</b><span class="tnum">05</span></div><div class="tmeta">UPLOAD AUDIO → AUTO BPM + STYLE</div><div class="tbar"><i></i></div></button>
+</div>
+<div class="upload-row"><button id="uploadBtn">⬆ UPLOAD AUDIO</button><span class="ufile" id="ufile">mp3 / wav / m4a / ogg — analyzed in-browser</span></div>
+<input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac" hidden>
+<div class="analyzer" id="analyzer" style="display:none"><span class="an-chip">BPM <b id="anBpm">—</b></span><span class="an-chip">KEY <b id="anKey">—</b></span><span class="an-chip">STYLE <b id="anStyle">—</b></span><span class="an-chip">STATUS <b id="anStatus">decoding…</b></span></div>
 </div>
 
 <div class="card">
@@ -154,102 +192,185 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div style="padding:14px">
 <div style="font-size:10px;letter-spacing:.12em;opacity:.6">PITCH DECK IN ONE LINE</div>
 <div class="bebas" style="font-size:20px;line-height:1;margin-top:4px">SYNC SOUND TO STRIDE. BEAT THE TRACK.</div>
-<div style="font-size:12px;opacity:.7;margin-top:6px;line-height:1.5">PaceBeat generates a live metronome that <b style="color:var(--acid)">adapts to your cadence and 400m split</b>. DJ vibe → trumpet stabs when you surge. Miss your split and the beat pushes you. Nail it and it locks.</div>
+<div style="font-size:12px;opacity:.7;margin-top:6px;line-height:1.5">PaceBeat analyzed your track: <b style="color:var(--acid)">F major • 127 BPM • 4-on-the-floor</b>. It re-generates that sound <b style="color:var(--acid)">live at your cadence</b> — miss your split and the beat pushes you; nail it and it locks.</div>
 </div>
 </div>
 </div>
 </div>
 
 <div class="footer">
-<span class="chip">✓ No install — runs in browser</span>
+<span class="chip">✓ Analyzed your audio (127 BPM, F major)</span>
+<span class="chip">✓ 4 generative tracks + upload</span>
+<span class="chip">✓ Syncs to cadence + 400m split</span>
 <span class="chip">✓ Works with headphones / speaker</span>
-<span class="chip">✓ Motion + tap cadence</span>
-<span class="chip">✓ Healf-ready: HRV → sauna protocol (next)</span>
 <span class="chip" style="border-color:var(--acid);color:var(--acid)">LIVE DEMO: RUN 100M NOW</span>
 </div>
 
 <script>
 const $=s=>document.querySelector(s)
-let audioCtx, nextNote=0, timerID, current16=0
+const midi2freq=m=>440*Math.pow(2,(m-69)/12)
+let audioCtx, master, reverb, delay, analyser, noiseBuf
+let nextNote=0, timerID, current16=0, stepIndex=0
 let isPlaying=false, isRunning=false
-let targetBPM=170, intensity=65, adaptive=true
+let targetBPM=127, effectiveBPM=127, intensity=65, adaptive=true
 let liveBPM=null, lapStart=0, runStart=0, laps=[]
-let dist=0, lapInterval=null
+let dist=0, lapInterval=null, currentTrack='fhouse'
 const targetPaceEl=$('#targetPace'), targetBpmEl=$('#targetBpm')
+const TRACKS={
+ fhouse:{bpm:127,name:'TECH HOUSE — F',key:'F MAJOR',root:41,bassRoot:29,scale:[0,2,4,5,7,9,11],
+  chords:[[41,45,48],[48,52,55],[45,48,52],[46,50,53]],
+  bassChords:[[29,41],[36,48],[33,45],[34,46]],
+  bassPat:[[0,0,0,12,0,0,7,0,0,2,0,0,0,12,7,0],[0,0,0,12,0,0,7,0,0,2,0,0,0,12,7,0],[0,0,0,12,0,0,7,0,0,2,0,0,0,12,7,0],[0,0,0,12,0,0,7,0,0,2,0,0,0,12,7,0]],
+  bassAccent:[3,7,11],
+  lead:[{b:0,s:2,n:0},{b:0,s:6,n:2},{b:0,s:10,n:4},{b:0,s:14,n:7},{b:1,s:2,n:5},{b:1,s:6,n:7},{b:1,s:10,n:4},{b:1,s:12,n:5},{b:2,s:2,n:4},{b:2,s:6,n:2},{b:2,s:10,n:0},{b:2,s:14,n:2},{b:3,s:2,n:0},{b:3,s:6,n:5},{b:3,s:10,n:2},{b:3,s:14,n:4}],
+  leadLen:.4, chordsOn:[0], hats:'bright', perc:'shaker', softKick:false, leadInstrument:'trumpet'},
+ acid:{bpm:129,name:'ACID 303',key:'F MINOR',root:41,bassRoot:29,scale:[0,3,5,7,8,10],bassAcid:true,
+  chords:[[41,44,48],[41,44,48],[39,43,46],[39,43,46]],
+  bassChords:[[29,41],[29,41],[27,39],[27,39]],
+  bassPat:[[0,0,0,8,0,0,0,3,0,0,0,10,0,0,0,0],[0,0,0,8,0,0,0,3,0,0,0,10,0,0,0,0],[0,0,0,8,0,0,0,3,0,0,0,10,0,0,0,0],[0,0,0,8,0,0,0,3,0,0,0,10,0,0,0,0]],
+  bassAccent:[3,7,11],
+  lead:[{b:0,s:2,n:0},{b:0,s:6,n:3},{b:0,s:10,n:5},{b:1,s:2,n:7},{b:1,s:6,n:8},{b:1,s:10,n:5},{b:2,s:2,n:3},{b:2,s:6,n:0},{b:3,s:2,n:3},{b:3,s:6,n:5}],
+  leadLen:.32, chordsOn:[0,8], hats:'acid', perc:'clave', leadInstrument:'acid'},
+ deep:{bpm:124,name:'MELODIC DEEP',key:'A MINOR',root:45,bassRoot:33,scale:[0,2,3,5,7,8,10],
+  chords:[[45,48,52],[41,45,48],[43,47,50],[40,43,47]],
+  bassChords:[[33,45],[29,41],[31,43],[28,40]],
+  bassPat:[[0,0,7,0,0,0,0,0,0,0,0,0,12,0,0,0],[0,0,7,0,0,0,0,0,0,0,0,0,12,0,0,0],[0,0,7,0,0,0,0,0,0,0,0,0,12,0,0,0],[0,0,7,0,0,0,0,0,0,0,0,0,12,0,0,0]],
+  bassAccent:[2],
+  lead:[{b:0,s:0,n:12},{b:0,s:4,n:15},{b:0,s:8,n:17},{b:0,s:12,n:19},{b:1,s:0,n:15},{b:1,s:6,n:12},{b:1,s:12,n:17},{b:2,s:0,n:19},{b:2,s:6,n:17},{b:2,s:12,n:15},{b:3,s:0,n:12},{b:3,s:8,n:15}],
+  leadLen:.5, chordsOn:[0,4,8,12], hats:'soft', perc:'ride', softKick:true, padChords:true, leadInstrument:'pluck'},
+ afro:{bpm:122,name:'AFRO HOUSE',key:'D MINOR',root:38,bassRoot:26,scale:[0,2,3,5,7,8,10],
+  chords:[[38,41,45],[36,40,43],[34,38,41],[33,37,40]],
+  bassChords:[[26,38],[24,36],[22,34],[21,33]],
+  bassPat:[[0,0,0,0,7,0,0,0,0,0,0,0,12,0,0,0],[0,0,0,0,7,0,0,0,0,0,0,0,12,0,0,0],[0,0,0,0,7,0,0,0,0,0,0,0,12,0,0,0],[0,0,0,0,7,0,0,0,0,0,0,0,12,0,0,0]],
+  bassAccent:[4,12],
+  lead:[{b:0,s:0,n:0},{b:0,s:6,n:0},{b:0,s:10,n:3},{b:1,s:0,n:5},{b:1,s:8,n:3},{b:2,s:0,n:0},{b:2,s:6,n:5},{b:2,s:10,n:3},{b:3,s:0,n:7},{b:3,s:8,n:3}],
+  leadLen:.22, chordsOn:[0,8], hats:'afro', perc:'conga', leadInstrument:'horn'}
+}
+let UPLOAD=null
+let stepEls=[]
+const grid=$('#grid'); for(let i=0;i<16;i++){ const el=document.createElement('i'); if(i%4===0) el.style.background='#333'; grid.appendChild(el); stepEls.push(el)}
+const stepbar=$('#stepbar'); for(let i=0;i<64;i++) stepbar.appendChild(document.createElement('i'))
+const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i'); b.style.height='6px'; viz.appendChild(b)}
 function fmt(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(Math.floor((sec%1)*10))}
 function paceFmt(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0')}
 function getTargetSec(){ return parseInt(targetPaceEl.value,10)}
-$('#targetBpm').addEventListener('input',e=>{targetBPM=parseInt(e.target.value,10);$('#targetBpmVal').textContent=targetBPM;$('#tgtBpm2').innerHTML=targetBPM+' <small>BPM</small>';$('#bpmBadge').textContent=targetBPM+' BPM'})
+function setBPMUI(b){ targetBPM=b; $('#targetBpm').value=b; $('#targetBpmVal').textContent=b; $('#tgtBpm2').innerHTML=b+' <small>BPM</small>'; $('#bpmBadge').textContent=b+' BPM • '+(isPlaying?'PLAYING':'READY')}
+$('#targetBpm').addEventListener('input',e=>setBPMUI(parseInt(e.target.value,10)))
 $('#targetPace').addEventListener('input',e=>{const v=parseInt(e.target.value,10);$('#targetPaceVal').textContent=paceFmt(v);$('#splitDelta').textContent='— target '+paceFmt(v)})
 $('#intensity').addEventListener('input',e=>{intensity=parseInt(e.target.value,10);$('#intensityVal').textContent=intensity+'%'})
 $('#adaptive').addEventListener('change',e=>adaptive=e.target.checked)
-const grid=$('#grid'); for(let i=0;i<16;i++){ const el=document.createElement('i'); if(i%4===0) el.style.background='#333'; grid.appendChild(el)}
-const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i'); b.style.height=(8+Math.random()*28)+'px'; b.style.opacity=.6+Math.random()*.4; viz.appendChild(b)}
-function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume()}
-function playTone(freq, dur, gain, type='sine', t){
- const o=audioCtx.createOscillator(), g=audioCtx.createGain();
- o.type=type; o.frequency.value=freq; g.gain.value=gain;
- o.connect(g).connect(audioCtx.destination);
- g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
- o.start(t); o.stop(t+dur+.02)
+function ensureAudio(){
+ if(!audioCtx){
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)()
+  master=audioCtx.createGain(); master.gain.value=.9
+  const comp=audioCtx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=6
+  master.connect(comp).connect(audioCtx.destination)
+  analyser=audioCtx.createAnalyser(); analyser.fftSize=64; analyser.smoothingTimeConstant=.6; master.connect(analyser)
+  reverb=audioCtx.createConvolver();
+  const len=Math.floor(audioCtx.sampleRate*1.6), ir=audioCtx.createBuffer(2,len,audioCtx.sampleRate)
+  for(let c=0;c<2;c++){const d=ir.getChannelData(c); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+  reverb.buffer=ir; const revGain=audioCtx.createGain(); revGain.gain.value=.4; reverb.connect(revGain).connect(master); reverbGain=revGain
+  delay=audioCtx.createDelay(1); delay.delayTime.value=60/127/4*3; const fb=audioCtx.createGain(); fb.gain.value=.32; const dg=audioCtx.createGain(); dg.gain.value=.35
+  const lp=audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3800
+  delay.connect(lp).connect(fb).connect(delay); delay.connect(dg).connect(master)
+  delayNode=delay
+  noiseBuf=audioCtx.createBuffer(1,audioCtx.sampleRate,audioCtx.sampleRate); const nd=noiseBuf.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1
+ }
+ if(audioCtx.state==='suspended') audioCtx.resume()
 }
-function playKick(t, vel){
- const o=audioCtx.createOscillator(), g=audioCtx.createGain();
- o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(40,t+.09);
- g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(0.001,t+.28);
- o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+.3)
-}
+let reverbGain, delayNode
+function noise(t,dur,hpFreq,vel){ const src=audioCtx.createBufferSource(); src.buffer=noiseBuf; const f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=hpFreq; const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); src.connect(f).connect(g).connect(master); src.start(t); src.stop(t+dur+.02)}
+function kick(t,vel=1){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(155,t); o.frequency.exponentialRampToValueAtTime(45,t+.1); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.connect(g).connect(master); o.start(t); o.stop(t+.32)}
+function kickSoft(t,vel=.8){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(50,t+.16); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.45); o.connect(g).connect(master); o.start(t); o.stop(t+.5)}
+function hat(t,open,vel=1){ noise(t,open?.4:.055,open?6000:8200,vel*(open?.18:.3))}
+function clap(t,vel=1){ for(let i=0;i<3;i++) noise(t+i*.012,.07,1200,vel*(.3-i*.07))}
+function bass(t,midi,vel,len){
+ const o=audioCtx.createOscillator(), o2=audioCtx.createOscillator(), g=audioCtx.createGain()
+ o.type='sawtooth'; o.frequency.value=midi2freq(midi); o2.type='sine'; o2.frequency.value=midi2freq(midi)/2
+ const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(420,t); f.frequency.exponentialRampToValueAtTime(140,t+len)
+ g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+len)
+ o.connect(f).connect(g).connect(master); o2.connect(g); o.start(t); o2.start(t); o.stop(t+len+.05); o2.stop(t+len+.05)}
+function acidNote(t,midi,vel,accent,len){
+ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sawtooth'; o.frequency.value=midi2freq(midi)
+ const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.Q.value=18
+ f.frequency.setValueAtTime(200,t); f.frequency.exponentialRampToValueAtTime(accent?3800:1800,t+len*.7)
+ g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+len)
+ o.connect(f).connect(g).connect(master); o.start(t); o.stop(t+len+.05)}
+function chordStab(t,notes,vel){ const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1100; f.Q.value=.8; g.connect(f).connect(master); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.connect(f); o.start(t); o.stop(t+.55)})}
+function padChord(t,notes,vel,len=1.2){ const g=audioCtx.createGain(); g.gain.setValueAtTime(.001,t); g.gain.linearRampToValueAtTime(vel,t+.35); g.gain.linearRampToValueAtTime(.001,t+len); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1400; g.connect(f).connect(master); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.detune.value=(Math.random()*8-4); o.connect(f); o.start(t); o.stop(t+len+.1)})}
+function pluck(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=midi2freq(midi); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2400; g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); o.connect(f).connect(g).connect(master); g.connect(reverb); o.start(t); o.stop(t+.55)}
+function trumpet(t,midi,vel,len=.4){
+ const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.Q.value=2.2
+ f.frequency.setValueAtTime(500,t); f.frequency.exponentialRampToValueAtTime(2400,t+.08); f.frequency.setValueAtTime(2400,t+.09)
+ const g=audioCtx.createGain(); g.gain.setValueAtTime(.001,t); g.gain.linearRampToValueAtTime(vel,t+.03); g.gain.setValueAtTime(vel*.8,t+.06); g.gain.exponentialRampToValueAtTime(.001,t+len)
+ f.connect(g).connect(master); g.connect(reverb); g.connect(delayNode)
+ const vib=audioCtx.createOscillator(), vg=audioCtx.createGain(); vib.frequency.value=5.6; vg.gain.value=6; vib.connect(vg).connect(f.frequency); vib.start(t); vib.stop(t+len)
+ const o=audioCtx.createOscillator(), o2=audioCtx.createOscillator(); o.type='sawtooth'; o2.type='triangle'
+ o.frequency.setValueAtTime(midi2freq(midi)*1.02,t); o.frequency.exponentialRampToValueAtTime(midi2freq(midi),t+.05); o2.frequency.value=midi2freq(midi)
+ o.connect(f); o2.connect(f); o.start(t); o2.start(t); o.stop(t+len+.05); o2.stop(t+len+.05)}
+function conga(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(midi2freq(midi),t); o.frequency.exponentialRampToValueAtTime(midi2freq(midi)*.5,t+.09); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.22); o.connect(g).connect(master); o.start(t); o.stop(t+.25)}
+function shaker(t,vel){ noise(t,.04,7000,vel*.12)}
+function clave(t,vel){ noise(t,.05,2500,vel*.25)}
+function ride(t,vel){ noise(t,.5,8000,vel*.1)}
 function schedule(){
- const beatDur=60/targetBPM;
- while(nextNote < audioCtx.currentTime + .12){
-  const step=current16%16
-  const isKick = step%4===0
-  const isHat = step%2===1 || (intensity>70 && Math.random()>.6)
-  const vel = isKick? .9 : .32
-  if(isKick) playKick(nextNote, vel*(.6+intensity/180))
-  if(isHat) playTone(9000,.04,.12*(intensity/100),'square',nextNote)
-  if(step===0) playTone(220,.18,.18,'sine',nextNote)
-  if(adaptive && isRunning){
-    const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
-    const behind=elapsed - tgt*prog
-  }
-  document.querySelectorAll('#grid i').forEach((el,i)=>{ el.classList.toggle('active', i===step); el.classList.toggle('on', isKick? i%4===0 : (i%4===2 && intensity>35)) })
-  document.querySelectorAll('#viz i').forEach((el,i)=>{
-    const h= 6 + Math.abs(Math.sin((step+i)*.6))* (18+intensity/4) + (isKick&&i%3===0?18:0)
-    el.style.height=h+'px'; el.style.background = isKick? 'var(--acid)' : (step%4===0?'#fff':'var(--cyan)')
-  })
+ const beatDur=60/effectiveBPM
+ while(nextNote < audioCtx.currentTime+.12){
+  const st=currentTrack==='upload'?UPLOAD:TRACKS[currentTrack]
+  const s=stepIndex%16, b=Math.floor(stepIndex/16)%4
+  const energy = Math.max(0,Math.min(1.2,intensity/100 + (pushAmount>0? .25:0) + (pushAmount<0? -.2:0)))
+  const t=nextNote
+  if(st.softKick){ if(s%4===0) kickSoft(t,.7+.3*energy)} else if(s%4===0) kick(t, .75+.4*energy)
+  if(st.hats==='bright'){ if(s%2===1) hat(t,false); if(s===14&&energy>.55) hat(t,true)}
+  else if(st.hats==='acid'){ if(s%4===2) hat(t,false,.5); if(s===10&&energy>.6) hat(t,true)}
+  else if(st.hats==='soft'){ if(s%2===1&&s%4!==2) hat(t,false,.22)}
+  else if(st.hats==='afro'){ if(s%4===2) hat(t,false,.3)}
+  if(s===4||s===12) clap(t, .5+.5*energy)
+  if(st.perc==='shaker'&&energy>.35&&s%2===0) shaker(t, 1+(s%8===4?.6:0))
+  if(st.perc==='clave'&&(s===3||s===7)) clave(t,1)
+  if(st.perc==='conga'){ if(s===2||s===6) conga(t,62,.5); if(s===10) conga(t,58,.45); if(s===14) conga(t,66,.55)}
+  if(st.perc==='ride'&&s===0) ride(t,1)
+  const bp=st.bassPat[b][s]
+  if(bp!=null){ const m=st.bassChords[b][0]+bp
+   if(st.bassAcid) acidNote(t,m, .3+.3*energy, st.bassAccent.includes(s), .22)
+   else bass(t,m, .38+.25*energy, .22)}
+  if(st.chordsOn.includes(s)){ const ch=st.chords[b]; const vel=.1+.08*energy
+   if(st.padChords) padChord(t,ch,vel,1.1)
+   else chordStab(t,ch,vel)}
+  if(energy>.4){ st.lead.forEach(l=>{ if(l.b===b&&l.s===s){
+    if(st.leadInstrument==='trumpet') trumpet(t,st.root+24+l.n,.3,l.len)
+    else if(st.leadInstrument==='pluck') pluck(t,st.root+12+l.n,.22)
+    else if(st.leadInstrument==='horn') trumpet(t,st.chords[b][0]+24,.15,.25)
+    else acidNote(t,st.root+12+l.n-12,.24,true,l.len)}})}
+  if(pushAmount>1&&s===0) trumpet(t,st.root+36, .4, .5)
+  stepEls.forEach((el,i)=>{ el.classList.toggle('active', i===s); el.classList.toggle('on', i%4===0)})
+  const sb=stepbar.children; for(let i=0;i<64;i++) sb[i].classList.toggle('cur', Math.floor(stepIndex/4)===i)
   nextNote += beatDur/4
-  current16 = (current16+1)%16
+  stepIndex=(stepIndex+1)%64
+  current16=stepIndex
  }
 }
+let pushAmount=0
 function startAudio(){
  ensureAudio(); if(isPlaying) return; isPlaying=true
+ delayNode.delayTime.value=60/effectiveBPM/4*3
  nextNote=audioCtx.currentTime+.05; timerID=setInterval(schedule,25)
  $('#metronomeBtn').textContent='🔊 SOUND ON • PLAYING'
- $('#bpmBadge').textContent=targetBPM+' BPM • PLAYING'
+ $('#bpmBadge').textContent=Math.round(effectiveBPM)+' BPM • PLAYING'
  $('#modeBadge').textContent='BEAT LIVE'
  $('#modeBadge').className='badge badge-acid'
 }
 function stopAudio(){ isPlaying=false; clearInterval(timerID); $('#metronomeBtn').textContent='🔊 SOUND ON'}
-let effectiveBPM=targetBPM
 function updateAdaptive(){
- if(!adaptive || !isRunning || liveBPM==null) { effectiveBPM=targetBPM; return}
- const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec()
- const expectedProgress= elapsed/tgt
- const liveDelta = liveBPM - targetBPM
- let push=0
- if(expectedProgress>0.15){
-   const timeBehind = elapsed - tgt*.25 - (dist%400)/400*tgt
- }
- const behindTime = elapsed - (dist%400)/400*tgt - (tgt*( (Date.now()-runStart)/1000 / tgt - Math.floor((Date.now()-runStart)/1000/tgt)) )
- const splitBehind = elapsed - tgt*(elapsed/tgt)
- const behindSec = elapsed - tgt*(Math.min(elapsed/tgt,1))
- const cadencePush = liveDelta < -4 ? 6 : liveDelta>4 ? -4 : 0
- const splitPush = behindSec > 1 ? 8 : behindSec < -1 ? -6 : 0
- push = cadencePush + splitPush
- effectiveBPM = Math.max(120,Math.min(205, targetBPM + push))
- if(Math.abs(effectiveBPM-targetBPM)>2){ $('#bpmBadge').textContent=Math.round(effectiveBPM)+' BPM • PUSHING'; $('#bpmBadge').style.background='var(--pink)' } else { $('#bpmBadge').textContent=targetBPM+' BPM • LOCKED'; $('#bpmBadge').style.background='' }
- targetBPM = parseInt($('#targetBpm').value,10)
+ if(!adaptive||!isRunning||liveBPM==null){ effectiveBPM=targetBPM; pushAmount=0; return}
+ const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
+ const deltaSec=elapsed-tgt*prog
+ const cadencePush=(liveBPM-targetBPM)<-4?6:(liveBPM-targetBPM)>4?-4:0
+ const splitPush=deltaSec>1?8:deltaSec<-1?-6:0
+ pushAmount=(cadencePush+splitPush)/3
+ effectiveBPM=Math.max(100,Math.min(215,targetBPM+cadencePush+splitPush))
+ if(Math.abs(effectiveBPM-targetBPM)>2){ $('#bpmBadge').textContent=Math.round(effectiveBPM)+' BPM • PUSHING'; $('#bpmBadge').style.background='var(--pink)'}
+ else { $('#bpmBadge').textContent=targetBPM+' BPM • LOCKED'; $('#bpmBadge').style.background=''}
+ if(isPlaying) delayNode.delayTime.value=60/effectiveBPM/4*3
 }
 function tick(){
  if(!isRunning) return
@@ -257,81 +378,141 @@ function tick(){
  const tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
  $('#splitTime').textContent=fmt(elapsed)
  $('#prog').style.width=(prog*100)+'%'
- const perim=2*(260+140)+2*Math.PI*70-0, dash=perim*prog
- $('#progressTrack').setAttribute('stroke-dasharray', dash+' '+(perim-dash))
- const angle = prog*2*Math.PI - Math.PI/2
- const rx=130, ry=70, cx=140, cy=80
+ const perim=2*(260+140)+2*Math.PI*70
+ $('#progressTrack').setAttribute('stroke-dasharray',(perim*prog)+' '+(perim-perim*prog))
+ const ang=prog*2*Math.PI-Math.PI/2
  let x,y
- if(prog<0.21){ x=10+70+ prog/0.21*130; y=10 }
- else if(prog<0.5){ const p=(prog-0.21)/0.29; const a=p*Math.PI; x=10+200+Math.cos(a)*70; y=10+70+Math.sin(a)*70 }
- else if(prog<0.71){ x=10+200 - (prog-0.5)/0.21*130; y=150 }
- else { const p=(prog-0.71)/0.29; const a=Math.PI + p*Math.PI; x=10+70+Math.cos(a)*70; y=10+70+Math.sin(a)*70 }
+ if(prog<.21){ x=10+70+prog/.21*130; y=10}
+ else if(prog<.5){ const p=(prog-.21)/.29, a=p*Math.PI; x=10+200+Math.cos(a)*70; y=10+70+Math.sin(a)*70}
+ else if(prog<.71){ x=10+200-(prog-.5)/.21*130; y=150}
+ else { const p=(prog-.71)/.29, a=Math.PI+p*Math.PI; x=10+70+Math.cos(a)*70; y=10+70+Math.sin(a)*70}
  $('#runnerDot').setAttribute('cx',x); $('#runnerDot').setAttribute('cy',y)
- const ghostProg = (total % tgt)/tgt
- let gx,gy
- if(ghostProg<0.21){ gx=10+70+ ghostProg/0.21*130; gy=10 }
- else if(ghostProg<0.5){ const p=(ghostProg-0.21)/0.29; const a=p*Math.PI; gx=10+200+Math.cos(a)*70; gy=10+70+Math.sin(a)*70 }
- else if(ghostProg<0.71){ gx=10+200 - (ghostProg-0.5)/0.21*130; gy=150 }
- else { const p=(ghostProg-0.71)/0.29; const a=Math.PI + p*Math.PI; gx=10+70+Math.cos(a)*70; gy=10+70+Math.sin(a)*70 }
+ const ghostProg=(total%tgt)/tgt; let gx,gy
+ if(ghostProg<.21){ gx=10+70+ghostProg/.21*130; gy=10}
+ else if(ghostProg<.5){ const p=(ghostProg-.21)/.29, a=p*Math.PI; gx=10+200+Math.cos(a)*70; gy=10+70+Math.sin(a)*70}
+ else if(ghostProg<.71){ gx=10+200-(ghostProg-.5)/.21*130; gy=150}
+ else { const p=(ghostProg-.71)/.29, a=Math.PI+p*Math.PI; gx=10+70+Math.cos(a)*70; gy=10+70+Math.sin(a)*70}
  const g=$('#ghostDot'); if(ghostOn){ g.setAttribute('cx',gx); g.setAttribute('cy',gy); g.style.display='block'} else g.style.display='none'
- dist = laps.length*400 + prog*400
- $('#distLabel').textContent=Math.round(dist)+' / '+( (laps.length+1)*400 )+'m'
- const behind = elapsed - tgt*prog* (prog<1?1:1)
- const deltaSec = elapsed - tgt*prog
- const aheadBehindEl=$('#aheadBehind')
- if(Math.abs(deltaSec)<0.4){ aheadBehindEl.textContent='±0.0s'; aheadBehindEl.style.color='var(--acid)'; $('#aheadLabel').textContent='on pace ✓'; $('#aheadLabel').style.color='var(--acid)'}
- else if(deltaSec>0){ aheadBehindEl.textContent='+'+deltaSec.toFixed(1)+'s'; aheadBehindEl.style.color='var(--pink)'; $('#aheadLabel').textContent='behind — push!'; $('#aheadLabel').style.color='var(--pink)'}
- else { aheadBehindEl.textContent=deltaSec.toFixed(1)+'s'; aheadBehindEl.style.color='var(--cyan)'; $('#aheadLabel').textContent='ahead — hold!'; $('#aheadLabel').style.color='var(--cyan)'}
+ dist=laps.length*400+prog*400
+ $('#distLabel').textContent=Math.round(dist)+' / '+((laps.length+1)*400)+'m'
+ const deltaSec=elapsed-tgt*prog
+ const ab=$('#aheadBehind')
+ if(Math.abs(deltaSec)<.4){ ab.textContent='±0.0s'; ab.style.color='var(--acid)'; $('#aheadLabel').textContent='on pace ✓'; $('#aheadLabel').style.color='var(--acid)'}
+ else if(deltaSec>0){ ab.textContent='+'+deltaSec.toFixed(1)+'s'; ab.style.color='var(--pink)'; $('#aheadLabel').textContent='behind — push!'; $('#aheadLabel').style.color='var(--pink)'}
+ else { ab.textContent=deltaSec.toFixed(1)+'s'; ab.style.color='var(--cyan)'; $('#aheadLabel').textContent='ahead — hold!'; $('#aheadLabel').style.color='var(--cyan)'}
  updateAdaptive()
- if(isPlaying) targetBPM = Math.round(effectiveBPM)
 }
-setInterval(tick, 60)
+setInterval(tick,60)
 let ghostOn=false
-$('#ghostBtn').onclick=()=>{ ghostOn=!ghostOn; $('#ghostBtn').textContent=ghostOn?'👻 GHOST: ON':'👻 GHOST: OFF'; $('#ghostBtn').style.background=ghostOn?'var(--cyan)':''; $('#ghostBtn').style.color=ghostOn?'#000':'' }
+$('#ghostBtn').onclick=()=>{ ghostOn=!ghostOn; $('#ghostBtn').textContent=ghostOn?'👻 GHOST: ON':'👻 GHOST: OFF'; $('#ghostBtn').style.background=ghostOn?'var(--cyan)':''; $('#ghostBtn').style.color=ghostOn?'#000':''}
 let taps=[]
-$('#tapBtn').addEventListener('click',()=>{
- const now=Date.now(); taps.push(now); taps=taps.filter(t=>now-t<3000); if(taps.length<2) return
- const intervals=[]; for(let i=1;i<taps.length;i++) intervals.push(taps[i]-taps[i-1])
- const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length
- const bpm=Math.round(60000/avg)
- if(bpm>=90 && bpm<=240){ liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'; const d=bpm - parseInt($('#targetBpm').value,10); const el=$('#liveDelta'); if(Math.abs(d)<=3){el.textContent='locked ✓'; el.className='delta up'} else if(d<0){el.textContent=(d)+' BPM — speed up!'; el.className='delta down'} else {el.textContent='+'+d+' BPM — ease'; el.className='delta up'}; if(adaptive) { targetBPM=bpm; $('#targetBpm').value=bpm; $('#targetBpmVal').textContent=bpm; $('#tgtBpm2').innerHTML=bpm+' <small>BPM</small>'} ensureAudio(); if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20); playTone(800,.08,.2,'square',audioCtx.currentTime) }
-})
+function cadenceFromTaps(now){ taps.push(now); taps=taps.filter(t=>now-t<4000); if(taps.length<2) return null
+ const iv=[]; for(let i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]); const avg=iv.reduce((a,b)=>a+b,0)/iv.length; const bpm=Math.round(60000/avg); return (bpm>=90&&bpm<=240)?bpm:null}
+function applyCadence(bpm){
+ liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'
+ const el=$('#liveDelta'), tgt=parseInt($('#targetBpm').value,10), d=bpm-tgt
+ if(Math.abs(d)<=3){ el.textContent='locked ✓'; el.className='delta up'} else if(d<0){ el.textContent=d+' BPM — speed up!'; el.className='delta down'} else { el.textContent='+'+d+' BPM — ease'; el.className='delta up'}
+ if(adaptive){ setBPMUI(bpm) }
+ ensureAudio(); if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20)
+ playPing(800)
+}
+function playPing(f){ const t=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=f; o.type='square'; g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.06); o.connect(g).connect(master); o.start(t); o.stop(t+.08)}
+$('#tapBtn').addEventListener('click',()=>{ const b=cadenceFromTaps(Date.now()); if(b) applyCadence(b)})
 let motionActive=false
 $('#motionBtn').onclick=async()=>{
  if(motionActive) return
  try{
-  if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){ const p=await DeviceMotionEvent.requestPermission(); if(p!=='granted') throw new Error('denied')}
-  let lastPeak=0, lastVal=0
+  if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){ const p=await DeviceMotionEvent.requestPermission(); if(p!=='granted') throw new Error('denied')}
+  let lastPeak=0,lastVal=0
   window.addEventListener('devicemotion',e=>{
-    const a=e.accelerationIncludingGravity; if(!a) return
-    const mag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2)
-    const now=Date.now()
-    if(mag>13.2 && mag>lastVal && now-lastPeak>250){ lastPeak=now; taps.push(now); taps=taps.filter(t=>now-t<3000); if(taps.length>=2){ const iv=[]; for(let i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]); const avg=iv.reduce((a,b)=>a+b,0)/iv.length; const bpm=Math.round(60000/avg); if(bpm>=120&&bpm<=220){ liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'; $('#cadBadge').textContent='MOTION • '+bpm+' BPM'; $('#cadBadge').style.background='var(--acid)'; $('#cadBadge').style.color='#000'} } }
-    lastVal=mag
+   const a=e.accelerationIncludingGravity; if(!a) return
+   const mag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2), now=Date.now()
+   if(mag>13.2&&mag>lastVal&&now-lastPeak>250){ const b=cadenceFromTaps(now); if(b){ liveBPM=b; applyCadence(b); $('#cadBadge').textContent='MOTION • '+b+' BPM'; $('#cadBadge').style.background='var(--acid)'; $('#cadBadge').style.color='#000'} }
+   lastVal=mag
   })
   motionActive=true; $('#motionBtn').textContent='MOTION • LISTENING'; $('#motionBtn').style.background='var(--acid)'; $('#motionBtn').style.color='#000'; $('#cadBadge').textContent='MOTION ON'
- }catch(err){ alert('Motion sensor needs HTTPS + permission. Use TAP instead.'); }
+ }catch(err){ alert('Motion sensor needs HTTPS + permission. Use TAP instead.')}
 }
-$('#metronomeBtn').onclick=()=>{ ensureAudio(); if(!isPlaying) startAudio(); else { stopAudio(); }}
+$('#metronomeBtn').onclick=()=>{ ensureAudio(); if(!isPlaying) startAudio(); else stopAudio()}
 $('#startBtn').onclick=()=>{
  ensureAudio(); startAudio()
- if(!isRunning){ isRunning=true; runStart=Date.now(); lapStart=runStart; $('#startBtn').textContent='⏸ PAUSE'; $('#lapBtn').disabled=false; $('#modeBadge').textContent='RUNNING'; if(navigator.vibrate) navigator.vibrate(40); lapInterval=setInterval(tick,50) } else { isRunning=false; $('#startBtn').textContent='▶ RESUME'; $('#modeBadge').textContent='PAUSED'; clearInterval(lapInterval)}
+ if(!isRunning){ isRunning=true; runStart=Date.now(); lapStart=runStart; $('#startBtn').textContent='⏸ PAUSE'; $('#lapBtn').disabled=false; $('#modeBadge').textContent='RUNNING'; if(navigator.vibrate) navigator.vibrate(40)}
+ else { isRunning=false; $('#startBtn').textContent='▶ RESUME'; $('#modeBadge').textContent='PAUSED'}
 }
 $('#lapBtn').onclick=()=>{
  if(!isRunning) return
  const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), delta=elapsed-tgt
- laps.push({split:elapsed, delta})
- lapStart=Date.now(); $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × 400m'
+ laps.push({split:elapsed,delta}); lapStart=Date.now()
+ $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × 400m'
  const tbody=$('#splitsBody'); if(laps.length===1) tbody.innerHTML=''
  const tr=document.createElement('tr')
- tr.innerHTML='<td class="bebas">'+laps.length+'</td><td>'+fmt(elapsed)+'</td><td>'+paceFmt(tgt)+'</td><td><span class="pill '+(Math.abs(delta)<1.2?'pill-good':'pill-bad')+'">'+(delta>0?'+':'' )+delta.toFixed(1)+'s</span></td>'
+ tr.innerHTML='<td class="bebas">'+laps.length+'</td><td>'+fmt(elapsed)+'</td><td>'+paceFmt(tgt)+'</td><td><span class="pill '+(Math.abs(delta)<1.2?'pill-good':'pill-bad')+'">'+(delta>0?'+':'')+delta.toFixed(1)+'s</span></td>'
  tbody.prepend(tr)
- if(navigator.vibrate) navigator.vibrate([30,40,30])
- ensureAudio(); playTone(delta<0?1200:600,.22,.28,'square',audioCtx.currentTime); setTimeout(()=>playTone(delta<0?1600:400,.18,.18,'sine',audioCtx.currentTime+.14),0)
- if(laps.length>=1 && window.speechSynthesis){ const u=new SpeechSynthesisUtterance(delta<0? 'Lap '+laps.length+', ahead ' + Math.abs(delta).toFixed(1) : 'Lap '+laps.length+', behind ' + delta.toFixed(1)); u.rate=1.1; speechSynthesis.speak(u)}
+  if(navigator.vibrate) navigator.vibrate([30,40,30])
+  ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
+ if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(delta<0?'Lap '+laps.length+', ahead '+Math.abs(delta).toFixed(1):'Lap '+laps.length+', behind '+delta.toFixed(1)); u.rate=1.1; speechSynthesis.speak(u)}
 }
-$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; clearInterval(lapInterval); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000') }
-$('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\\n') || 'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits', text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)}) }
+$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
+$('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
+document.querySelectorAll('.track-btn').forEach(btn=>btn.onclick=()=>selectTrack(btn.dataset.track))
+function selectTrack(id){
+ if(id==='upload'&&!UPLOAD) return
+ currentTrack=id
+ document.querySelectorAll('.track-btn').forEach(b=>b.classList.toggle('active',b.dataset.track===id))
+ const st=currentTrack==='upload'?UPLOAD:TRACKS[id]
+ $('#trackBadge').textContent=st.name
+ $('#bpmBadge').textContent=st.bpm+' BPM • '+(isPlaying?'PLAYING':'READY')
+ $('#anStyle').textContent=st.name
+ if(adaptive||liveBPM==null){ setBPMUI(st.bpm); if(isPlaying&&delayNode) delayNode.delayTime.value=60/st.bpm/4*3}
+}
+function detectBPM(buffer){
+ const data=buffer.getChannelData(0), sr=buffer.sampleRate
+ const hop=512, win=1024, env=[]
+ for(let i=0;i+win<data.length;i+=hop){ let s=0; for(let j=0;j<win;j++){ const v=data[i+j]; s+=v*v } env.push(Math.sqrt(s/win)) }
+ const ac=new Float64Array(201)
+ for(let bpm=90;bpm<=200;bpm++){
+  const lag=Math.round(sr*60/bpm/hop); if(lag>=env.length) continue
+  let score=0,count=0
+  for(let i=lag;i<env.length;i++){ score+=env[i-lag]*env[i]; count++ }
+  ac[bpm]=score/count
+ }
+ let best=127
+ for(let bpm=90;bpm<=200;bpm++){ if(ac[bpm]>ac[best]) best=bpm }
+ while(best*2<=200 && ac[best*2]>ac[best]*0.9) best*=2
+ return best
+}
+$('#uploadBtn').onclick=()=>$('#fileInput').click()
+$('#fileInput').onchange=e=>{
+ const file=e.target.files[0]; if(!file) return
+ $('#ufile').textContent=file.name+' ('+Math.round(file.size/1024)+' KB)'
+ const an=$('#analyzer'); an.style.display='flex'; $('#anStatus').textContent='decoding…'
+ ensureAudio()
+ const fr=new FileReader()
+ fr.onload=async()=>{
+  try{
+   const buf=await audioCtx.decodeAudioData(fr.result)
+   $('#anStatus').textContent='analyzing…'
+    const bpm=detectBPM(buf)
+    $('#anBpm').textContent=bpm+' BPM'
+    const style=bpm>=132?'acid':bpm>=116?'fhouse':bpm>=108?'deep':'afro'
+    $('#anStyle').textContent=TRACKS[style].name
+    $('#anKey').textContent=TRACKS[style].key
+    UPLOAD={...TRACKS[style], bpm, name:file.name.replace(/\.[^.]+$/,'').slice(0,14).toUpperCase(), key:TRACKS[style].key}
+    $('#anStatus').textContent='ready ✓'
+    selectTrack('upload')
+    setBPMUI(bpm)
+  }catch(err){ $('#anStatus').textContent='decode failed — try mp3/wav'; console.error(err)}
+ }
+ fr.readAsArrayBuffer(file)
+}
+function drawViz(){
+ if(!analyser) { requestAnimationFrame(drawViz); return }
+ const d=new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(d)
+ viz.childNodes.forEach((el,i)=>{ const v=d[Math.min(i*2,d.length-1)]/255; el.style.height=(6+v*50)+'px'; el.style.background=v>.5?'var(--acid)':v>.25?'#fff':'var(--cyan)'})
+ requestAnimationFrame(drawViz)
+}
+drawViz()
+selectTrack('fhouse')
 if(location.search.includes('autostart')) setTimeout(()=>$('#startBtn').click(),600)
 </script>
 </body>
