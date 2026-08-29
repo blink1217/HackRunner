@@ -221,6 +221,18 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 
 <div class="card">
+<div class="card-h"><span>● MOTION TRACKER — REAL RUN</span><span class="badge" id="runBadge" style="background:#333;color:#fff">STATIONARY</span></div>
+<div style="padding:14px;display:grid;gap:10px">
+<div class="kpi">
+<div><label>GPS Speed</label><b id="gpsSpeed">— <small>km/h</small></b><div class="delta" id="gpsPace" style="color:var(--cyan)">— min/km</div></div>
+<div><label>GPS Distance</label><b id="gpsDist">0 <small>m</small></b><div class="delta up" id="gpsState">GPS off</div></div>
+</div>
+<button class="btn btn-ghost" id="gpsBtn" style="padding:12px;font-size:11px">📍 ENABLE GPS — DETECT REAL RUN</button>
+<div style="font-size:11px;opacity:.5;line-height:1.5">Real movement only: the track dot moves from <b style="color:var(--cyan)">GPS distance</b>, laps auto-log at <b style="color:var(--acid)">LAP DIST</b>, and the beat locks to your actual speed. Stop walking — watch it flip to STATIONARY. GPS auto-cadence when no other sensor.</div>
+</div>
+</div>
+
+<div class="card">
 <div class="card-h"><span>SPLITS & GHOST</span><span class="badge" style="background:var(--cyan);color:#000">SPLITCLASH</span></div>
 <div class="splits"><table><thead><tr><th>LAP</th><th>DIST</th><th>SPLIT</th><th>TARGET</th><th>Δ</th></tr></thead><tbody id="splitsBody"><tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/200m/400m</td></tr></tbody></table></div>
 <div style="padding:0 14px 14px;display:flex;gap:8px">
@@ -429,7 +441,10 @@ function updateAdaptive(){
 function tick(){
  if(!isRunning) return
  const now=Date.now(), elapsed=(now-lapStart)/1000, total=(now-runStart)/1000
- const tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
+ const tgt=getTargetSec()
+ let prog
+ if(gpsActive&&gpsDistance>0){ prog=Math.max(0,Math.min((gpsDistance-gpsLapBase)/lapDist,1)) }
+ else { prog=Math.min(elapsed/tgt,1) }
  $('#splitTime').textContent=fmt(elapsed)
  $('#prog').style.width=(prog*100)+'%'
  const perim=2*(260+140)+2*Math.PI*70
@@ -447,8 +462,8 @@ function tick(){
  else if(ghostProg<.71){ gx=10+200-(ghostProg-.5)/.21*130; gy=150}
  else { const p=(ghostProg-.71)/.29, a=Math.PI+p*Math.PI; gx=10+70+Math.cos(a)*70; gy=10+70+Math.sin(a)*70}
  const g=$('#ghostDot'); if(ghostOn){ g.setAttribute('cx',gx); g.setAttribute('cy',gy); g.style.display='block'} else g.style.display='none'
-  dist=laps.length*lapDist+prog*lapDist
-  $('#distLabel').textContent=Math.round(dist)+'m / '+((laps.length+1)*lapDist)+'m'
+ dist=gpsActive? gpsDistance : laps.length*lapDist+prog*lapDist
+ $('#distLabel').textContent=Math.round(dist)+'m / '+((laps.length+1)*lapDist)+'m'
  const deltaSec=elapsed-tgt*prog
  const ab=$('#aheadBehind')
  if(Math.abs(deltaSec)<.4){ ab.textContent='±0.0s'; ab.style.color='var(--acid)'; $('#aheadLabel').textContent='on pace ✓'; $('#aheadLabel').style.color='var(--acid)'}
@@ -493,10 +508,11 @@ $('#startBtn').onclick=()=>{
  if(!isRunning){ isRunning=true; runStart=Date.now(); lapStart=runStart; $('#startBtn').textContent='⏸ PAUSE'; $('#lapBtn').disabled=false; $('#modeBadge').textContent='RUNNING'; if(navigator.vibrate) navigator.vibrate(40)}
  else { isRunning=false; $('#startBtn').textContent='▶ RESUME'; $('#modeBadge').textContent='PAUSED'}
 }
-$('#lapBtn').onclick=()=>{
+function triggerLap(){
  if(!isRunning) return
  const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), delta=elapsed-tgt
  laps.push({split:elapsed,delta}); lapStart=Date.now()
+ if(gpsActive) gpsLapBase=gpsDistance
  $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × '+lapDist+'m · '+Math.round(laps.length*lapDist)+'m total'
  const tbody=$('#splitsBody'); if(laps.length===1) tbody.innerHTML=''
  const tr=document.createElement('tr')
@@ -506,7 +522,8 @@ $('#lapBtn').onclick=()=>{
  ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
  if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(delta<0?'Lap '+laps.length+', ahead '+Math.abs(delta).toFixed(1):'Lap '+laps.length+', behind '+delta.toFixed(1)); u.rate=1.1; speechSynthesis.speak(u)}
 }
-$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; stopTrackLoop(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/200m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
+$('#lapBtn').onclick=triggerLap
+$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; gpsDistance=0; gpsLapBase=0; gpsSpeed=0; gpsLastPos=null; gpsRunningState='STATIONARY'; stopTrackLoop(); updateGpsUI(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/200m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
 $('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
 document.querySelectorAll('.track-btn').forEach(btn=>btn.onclick=()=>selectTrack(btn.dataset.track))
 function selectTrack(id){
@@ -614,6 +631,44 @@ document.querySelectorAll('.lap-dist button').forEach(b=>b.onclick=()=>{
  $('#lapBtn').textContent='LAP +'+lapDist+'M'
  $('#splitDelta').textContent='— target '+paceFmt(parseInt(targetPaceEl.value,10)*lapDist/400)
 })
+let gpsWatchId=null, gpsActive=false, gpsLastPos=null, gpsDistance=0, gpsLapBase=0, gpsSpeed=0, gpsRunningState='STATIONARY', gpsLastFix=0
+function haversine(a,b){ const R=6371000, toR=d=>d*Math.PI/180, dLat=toR(b.lat-a.lat), dLon=toR(b.lon-a.lon), s=Math.sin(dLat/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(s)) }
+function paceKm(kmh){ if(kmh<=0.3) return '—'; const spm=60/kmh, m=Math.floor(spm), s=Math.round((spm-m)*60); return m+':'+String(s).padStart(2,'0') }
+function updateGpsUI(){
+ const kmh=gpsSpeed*3.6
+ $('#gpsSpeed').innerHTML=(kmh>=0.1? kmh.toFixed(1):'—')+' <small>km/h</small>'
+ $('#gpsDist').innerHTML=Math.round(gpsDistance)+' <small>m</small>'
+ $('#gpsPace').textContent=paceKm(kmh)+' min/km'
+ const st={RUNNING:['var(--acid)','#000'],WALKING:['var(--cyan)','#000'],STATIONARY:['#333','#fff']}[gpsRunningState]
+ const b=$('#runBadge'); b.textContent=gpsRunningState; b.style.background=st[0]; b.style.color=st[1]
+ $('#gpsState').textContent= gpsActive? (gpsRunningState==='RUNNING'?'RUN DETECTED ✓':gpsRunningState==='WALKING'?'moving…':'stationary — run!'):'GPS off'
+}
+function gpsToggle(){
+ const btn=$('#gpsBtn')
+ if(gpsActive){
+  if(gpsWatchId!=null) navigator.geolocation.clearWatch(gpsWatchId)
+  gpsWatchId=null; gpsActive=false; gpsSpeed=0; gpsRunningState='STATIONARY'; gpsLastPos=null
+  btn.textContent='📍 ENABLE GPS — DETECT REAL RUN'; btn.style.background=''; btn.style.color='#fff'
+  updateGpsUI(); return
+ }
+ if(!navigator.geolocation){ alert('GPS not available on this device — use TAP or MOTION instead.'); return }
+ btn.textContent='📍 GPS… waiting for fix'; btn.style.background='var(--cyan)'; btn.style.color='#000'
+ gpsActive=true; gpsDistance=0; gpsLapBase=0; updateGpsUI()
+ gpsWatchId=navigator.geolocation.watchPosition(gpsOnFix, ()=>{ if(gpsActive){ btn.textContent='📍 GPS ERROR — RETRY'; btn.style.background='var(--pink)'; btn.style.color='#fff'; $('#gpsState').textContent='no fix — open outdoors' } }, {enableHighAccuracy:true, maximumAge:500, timeout:20000})
+}
+function gpsOnFix(pos){
+ if(!gpsActive) return
+ const lat=pos.coords.latitude, lon=pos.coords.longitude, t=pos.timestamp
+ if(!gpsLastPos){ gpsLastPos={lat,lon}; gpsLastFix=t; return }
+ const d=haversine(gpsLastPos,{lat,lon}), dt=Math.max(0.05,(t-gpsLastFix)/1000)
+ if(d<80){ gpsDistance+=d; gpsSpeed=d/dt } else { gpsSpeed=0 }
+ gpsLastPos={lat,lon}; gpsLastFix=t
+ gpsRunningState= gpsSpeed>2.2 ? 'RUNNING' : gpsSpeed>1.2 ? 'WALKING' : 'STATIONARY'
+ updateGpsUI()
+ if(isRunning && gpsActive && gpsDistance-gpsLapBase >= lapDist-2) triggerLap()
+ if(gpsRunningState==='RUNNING' && liveBPM==null){ const bpm=Math.round(gpsSpeed*60); if(bpm>=120&&bpm<=200) applyCadence(bpm) }
+}
+$('#gpsBtn').onclick=gpsToggle
 document.querySelectorAll('.sample-btn').forEach(btn=>btn.onclick=()=>{
  const yt=$('#ytbox'), ab=$('#audiobox')
  if(btn.dataset.kind==='yt'){
