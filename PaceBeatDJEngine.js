@@ -533,6 +533,9 @@ class PaceBeatDJEngine {
 }
 
 // Export for use in browser
+if (typeof window !== 'undefined') {
+  window.PaceBeatDJEngine = PaceBeatDJEngine;
+}
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = PaceBeatDJEngine;
 }

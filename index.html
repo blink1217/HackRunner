@@ -774,7 +774,7 @@ $('#gpsBtn').onclick=gpsToggle
 let voiceOn=true, hapticOn=true, voicePrimed=false, hapticPrimed=false
 let djEngine=null
 function ensureDJEngine(){
- if(djEngine||!window.PaceBeatDJEngine) return
+ if(djEngine||typeof PaceBeatDJEngine==='undefined') return
  try{ djEngine=new PaceBeatDJEngine(); djEngine.init() }catch(e){ djEngine=null }
 }
 function djUpdate(){
