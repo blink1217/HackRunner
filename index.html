@@ -572,7 +572,7 @@ const TRACKS={
 let UPLOAD=null
 let stepEls=[]
 const grid=$('#grid'); for(let i=0;i<16;i++){ const el=document.createElement('i'); if(i%4===0) el.style.background='#333'; grid.appendChild(el); stepEls.push(el)}
-const stepbar=$('#stepbar'); for(let i=0;i<64;i++) stepbar.appendChild(document.createElement('i'))
+const stepbar=$('#stepbar'); const sbEls=[]; const sbCur=new Array(64).fill(false); for(let i=0;i<64;i++){ sbEls.push(stepbar.appendChild(document.createElement('i'))) }
 const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i'); b.style.height='6px'; viz.appendChild(b)}
 function fmt(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(Math.floor((sec%1)*10))}
 function paceFmt(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0')}
@@ -688,12 +688,21 @@ function schedule(){
   const final100 = gpsActive && ((gpuProgLap>=0.75 && gpuProgLap<1) || (elapsedTrack>=0.75*tgt))
   if(pushAmount>1&&final100&&s%16===0) trumpet(t,st.root+36,.45,.52)
   stepEls.forEach((el,i)=>{ el.classList.toggle('active', i===s); el.classList.toggle('on', i%4===0)})
-  const sb=stepbar.children; for(let i=0;i<64;i++) sb[i].classList.toggle('cur', Math.floor(stepIndex/4)===i)
   }catch(err){ console.warn('schedule step error:',err.message) }
   nextNote += beatDur/4
   stepIndex=(stepIndex+1)%64
   current16=stepIndex
  }
+}
+// visual step state is written by rAF, not the audio scheduler
+let vizStep=-1
+function drawStepUI(){
+ if(document.hidden||vizStep===current16) return
+ vizStep=current16
+ const s=current16%16
+ for(let i=0;i<16;i++){ const el=stepEls[i]; el.classList.toggle('active', i===s); el.classList.toggle('on', i%4===0) }
+ const q=(stepIndex>>2)
+ for(let i=0;i<64;i++){ const on=(i===q)!==sbCur[i]; if(on){ sbEls[i].classList.toggle('cur',true); sbCur[i]=true } else if(sbCur[i]){ sbEls[i].classList.remove('cur'); sbCur[i]=false } }
 }
 let pushAmount=0, gpuProgLap=0, elapsedTrack=0
 function startAudio(){
@@ -757,7 +766,35 @@ function tick(){
  v3Update()
  hudSync()
 }
-setInterval(tick,60)
+// ===== MASTER LOOP: one interval replaces 6, phase-dispatched, visibility-gated =====
+let _mTick=0,_mRec=0,_mViz=0,_mBle=0,_mMb=0,_mDraw=0
+const masterLoop=()=>{
+ if(document.hidden){ requestAnimationFrame(masterLoop); return } // freeze all UI work when tab hidden
+ const now=performance.now()
+ drawStepUI()                                  // every frame — cheap diffed writes
+ if(now-_mTick>=60){ _mTick=now; tick() }      // track engine
+ if(now-_mViz>=600){ _mViz=now; updateEnergyLabel() }
+ if(now-_mRec>=500){ _mRec=now; recoveryLoop() }
+ if(now-_mMb>=800){ _mMb=now; updateMobileBadge() }
+ if(now-_mBle>=3000){ _mBle=now; bleWatchdog() }
+ if(now-_mDraw>=66){ _mDraw=now; drawVizFrame() } // 15fps viz (was 60fps rAF)
+ requestAnimationFrame(masterLoop)
+}
+function updateEnergyLabel(){
+ const st=djEngine? djEngine.state : (pushAmount>1?'SURGE':pushAmount>0?'BEHIND_PACE':'ON_PACE')
+ const map={SURGE:'SURGE 🔥',BEHIND_PACE:'BUILDING ⚡',ON_PACE: intensity>=55?'HIGH':'FLOW'}
+ $('#energyLabel').textContent=map[st]||'FLOW'
+ $('#stemLockNote').textContent= currentTrack==='upload'&&$('#syncBpm').checked? 'custom track stretched to stride' : currentTrack==='upload'? 'native speed' : 'stems follow your pace'
+}
+function updateMobileBadge(){
+ const mb=$('#mbBadge'); if(!mb) return
+ const hr=bleHr? ' ♥'+bleHr : ''
+ mb.textContent= (isRunning? 'RUNNING':'STANDBY')+' · '+Math.round(effectiveBPM)+' BPM'+hr
+}
+function bleWatchdog(){
+ if(Date.now()-bleHrAt>8000 && bleHr!==null){ bleHr=null; $('#hrNote').textContent='lost' }
+ if(Date.now()-bleCadAt>6000 && bleCad!==null){ bleCad=null; $('#cadSrc').textContent=chooseSourceTag(); $('#bleNote').textContent='lost' }
+}
 let ghostOn=false
 $('#ghostBtn').onclick=()=>{ ghostOn=!ghostOn; $('#ghostBtn').textContent=ghostOn?'👻 GHOST: ON':'👻 GHOST: OFF'; $('#ghostBtn').style.background=ghostOn?'var(--cyan)':''; $('#ghostBtn').style.color=ghostOn?'#000':''}
 let taps=[]
@@ -1035,7 +1072,7 @@ function ensureRecovery(){
   recoveryMusic=new RecoveryMusic(audioCtx, synthBus)
  }catch(e){ recoveryEngine=null }
 }
-setInterval(()=>{
+function recoveryLoop(){
  if(!recoveryEngine) return
  const hr=bleHr|| (bleHrAt&&Date.now()-bleHrAt<8000? bleHr: (gpsActive&&gpsRunningState==='RUNNING'? Math.round(gpsSpeed*10+100):null))
  const sum=recoveryEngine.update(hr, isRunning&&gpsSpeed>2, gpsSpeed)
@@ -1073,7 +1110,7 @@ setInterval(()=>{
   const lbl=$('#breathLabel')
   if(inhaling!==lastBreathPhase){ lbl.textContent=inhaling?'INHALE':'EXHALE'; lastBreathPhase=inhaling; if(navigator.vibrate&&hapticOn) navigator.vibrate(inhaling?30:20) }
  } else bw.style.display='none'
-},500)
+}
 $('#saunaBtn').onclick=()=>{
  ensureRecovery()
  if(recoveryEngine.sauna){ recoveryEngine.endSauna(recoveryEngine.hrv.hrAvg); $('#saunaBtn').textContent='🔥 SAUNA 15 MIN'; $('#saunaBtn').classList.remove('playing') }
@@ -1343,22 +1380,18 @@ bleSetup('podBtn','running_speed_and_cadence','rsc_measurement',val=>{
    if(Date.now()-bleCadAt<2000) applyCadence(bleCad,'BLE pod')
   }
  }
-}, ()=>{$('#bleNote').textContent='pair failed'})
-setInterval(()=>{
- if(bleCad){
-  const s=bleCad/60, mph=s*2.2*0.6
-  $('#bleCadence').innerHTML=bleCad+' <small>SPM</small>'
+ }, ()=>{$('#bleNote').textContent='pair failed'})
+const vizData=new Uint8Array(32)
+const vizEls=[...viz.children]
+function drawVizFrame(){
+ if(!analyser) return
+ analyser.getByteFrequencyData(vizData)
+ for(let i=0;i<32;i++){ const el=vizEls[i]; const v=vizData[i]/255
+  el.style.height=(6+v*50)+'px'
+  el.style.background=v>.5?'var(--acid)':v>.25?'#fff':'var(--cyan)'
  }
- if(Date.now()-bleHrAt>8000 && bleHr!==null){ bleHr=null; $('#hrNote').textContent='lost' }
- if(Date.now()-bleCadAt>6000 && bleCad!==null){ bleCad=null; $('#cadSrc').textContent=chooseSourceTag(); $('#bleNote').textContent='lost' }
-},3000)
-function drawViz(){
- if(!analyser) { requestAnimationFrame(drawViz); return }
- const d=new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(d)
- viz.childNodes.forEach((el,i)=>{ const v=d[Math.min(i*2,d.length-1)]/255; el.style.height=(6+v*50)+'px'; el.style.background=v>.5?'var(--acid)':v>.25?'#fff':'var(--cyan)'})
- requestAnimationFrame(drawViz)
 }
-drawViz()
+requestAnimationFrame(masterLoop)
 selectTrack('fhouse')
 if(location.search.includes('autostart')) setTimeout(()=>$('#startBtn').click(),600)
 if('serviceWorker' in navigator && location.protocol==='https:'){ addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}) }) }
@@ -1366,11 +1399,6 @@ if('serviceWorker' in navigator && location.protocol==='https:'){ addEventListen
 $('#mbStart').onclick=()=>$('#startBtn').click()
 $('#mbLap').onclick=()=>{ triggerLap(); if(navigator.vibrate) navigator.vibrate(30) }
 $('#mbHud').onclick=()=>{ $('#hud').classList.add('on'); ensureAudio(); if(!isPlaying) startAudio() }
-setInterval(()=>{
- const mb=$('#mbBadge'); if(!mb) return
- const hr=bleHr? ' ♥'+bleHr : ''
- mb.textContent= (isRunning? 'RUNNING':'STANDBY')+' · '+Math.round(effectiveBPM)+' BPM'+hr
-},800)
 // ===== MOBILE CARD COLLAPSE (tap header to fold) =====
 (function(){
  if(!matchMedia('(max-width:820px)').matches) return
