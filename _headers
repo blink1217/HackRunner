@@ -1,0 +1,10 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), accelerometer=(self), bluetooth=(self), camera=(), microphone=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' blob: https://audio-previews.elements.envatousercontent.com; connect-src 'self' blob:; frame-src https://www.youtube-nocookie.com; base-uri 'self'; form-action 'self'
+/media/*
+  Cache-Control: public, max-age=31536000, immutable
+*.js
+  Cache-Control: public, max-age=3600

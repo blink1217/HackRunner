@@ -1,0 +1,19 @@
+{
+  "name": "PaceBeat — Adaptive DJ Engine for Runners",
+  "short_name": "PaceBeat",
+  "description": "8-stem generative DJ set that syncs to your cadence, 400m splits and GPS pace.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "categories": ["fitness", "music", "sports"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230A0A0A'/%3E%3Cpath d='M36 120 L66 120 L78 60 L102 144 L114 96 L126 120 L156 120' stroke='%23CCFF00' stroke-width='14' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
