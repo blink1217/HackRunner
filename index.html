@@ -207,6 +207,124 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .v3-stem .meter i.hot{background:var(--pink)}
 .v3-stem small{font-size:7px;letter-spacing:.05em;opacity:.55;text-transform:uppercase}
 .v3-row{display:flex;gap:8px;align-items:center}
+/* ===== MOBILE FIRST-CLASS ===== */
+:root{ --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px) }
+*{ -webkit-tap-highlight-color:transparent }
+button, .pill, .track-btn, .sample-btn, input[type=range], .tap{ touch-action:manipulation }
+body{ overscroll-behavior-y:contain }
+
+/* floating thumb action bar (visible ≤820px) */
+#mobileBar{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:40;
+  background:rgba(10,10,10,.92); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border-top:1px solid #2a2a2a; padding:8px 10px calc(8px + var(--safe-b));
+  grid-template-columns:1.4fr 1fr 1fr; gap:8px }
+#mobileBar button{ min-height:48px; border:none; border-radius:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; font-size:13px; font-family:'Space Grotesk',sans-serif; cursor:pointer }
+#mobileBar .mb-go{ background:var(--acid); color:#000 }
+#mobileBar .mb-lap{ background:var(--pink); color:#fff }
+#mobileBar .mb-hud{ background:#222; color:#fff; border:1px solid #333 }
+#mobileBar button:active{ transform:scale(.97) }
+#mobileBar .mb-badge{ position:absolute; top:4px; right:10px; font-size:9px; letter-spacing:.08em; opacity:.6; grid-column:1/-1; text-align:right; color:var(--acid); pointer-events:none }
+
+/* bottom sheet (collapsible secondary panels on mobile) */
+details.m-sheet{ border:1px solid #2a2a2a; border-radius:12px; background:#111; margin:0 12px 10px; overflow:hidden }
+details.m-sheet summary{ list-style:none; cursor:pointer; padding:12px 14px; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; color:var(--acid) }
+details.m-sheet summary::-webkit-details-marker{ display:none }
+details.m-sheet summary::after{ content:'▾'; font-size:12px; opacity:.5 }
+details.m-sheet[open] summary::after{ content:'▴' }
+details.m-sheet .m-body{ padding:0 12px 12px }
+
+@media(max-width:820px){
+  #mobileBar{ display:grid }
+  body{ padding-bottom:calc(76px + var(--safe-b)) }
+  .wrap{ padding:12px 10px; gap:12px }
+  header{ padding:10px 12px calc(10px + var(--safe-t)); position:sticky; top:0; z-index:30; background:rgba(10,10,10,.94); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px) }
+  .logo{ font-size:24px }
+  .hdr-right{ display:none }
+  .topbar{ font-size:9px; padding:5px 10px }
+  .topbar span:last-child{ display:none }
+  /* bigger type at arm's length */
+  .card-h{ font-size:11px; padding:12px 12px }
+  .stat b{ font-size:30px }
+  .stat label{ font-size:10px }
+  .kpi b{ font-size:18px }
+  /* track visual full-width */
+  .track-svg{ width:min(340px, 88vw); height:auto }
+  .track-wrap{ padding:12px }
+  /* big buttons */
+  .btn{ padding:16px 12px; font-size:15px; min-height:52px }
+  .controls .slider-row{ padding:12px; gap:12px }
+  .slider-row .mono{ font-size:12px }
+  /* stem row wraps */
+  .stem-row{ flex-wrap:wrap }
+  .stem-row button{ min-width:calc(20% - 5px); min-height:40px }
+  .mix-row{ flex-wrap:wrap }
+  .mix-row button{ min-height:40px }
+  /* v3 matrix compact */
+  .v3-stem small{ font-size:6px }
+  .v3-stem .meter{ height:28px }
+  .v3-matrix{ padding:8px 10px }
+  /* samples + upload stack */
+  .upload-row{ flex-direction:column }
+  .upload-row button{ width:100%; min-height:48px }
+  .upload-row .ufile{ text-align:center }
+  .sel-actions{ flex-direction:column; align-items:stretch }
+  .sel-actions .pv-btn{ min-height:48px; text-align:center }
+  .lock-toggle{ justify-content:center; min-height:44px }
+  /* panels that were desktop-friendly become sheets */
+  .stem-pack{ margin:0 12px 10px }
+  .sp-actions{ flex-direction:column; align-items:stretch }
+  .sp-actions button{ min-height:44px }
+  /* footer chips scroll */
+  .footer{ padding:10px 12px calc(10px + var(--safe-b)); flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none }
+  .footer::-webkit-scrollbar{ display:none }
+  .footer .chip{ flex:0 0 auto }
+  /* compact beat visuals */
+  .beat-grid{ display:none }
+  .stepbar{ display:none }
+  .viz{ height:44px }
+  /* cadence tap zone larger */
+  .tap{ padding:22px 14px; font-size:14px; min-height:64px }
+  /* recovery ring + kpis row */
+  .rec-ring{ width:64px; height:64px }
+  .rec-ring-in{ width:50px; height:50px }
+  .rec-ring-in b{ font-size:20px }
+  .kpi[style*="1fr 1fr 1fr"]{ grid-template-columns:1fr 1fr 1fr !important }
+  /* ble buttons stack */
+  .ble-row{ flex-direction:column }
+  .ble-row button{ min-height:44px }
+  /* HUD scales down */
+  #hud .hcell b{ font-size:44px }
+  #hud .hcell small{ font-size:10px }
+  #hud .hcell em{ font-size:11px }
+  /* modal/iframe full width */
+  .ytbox{ margin:0 10px 10px }
+  /* pills bigger touch area */
+  .pill{ padding:12px 18px; min-height:44px; display:inline-flex; align-items:center }
+  .sample-btn{ min-height:56px }
+}
+
+@media(max-width:400px){
+  .logo{ font-size:20px }
+  .stat b{ font-size:24px }
+  .v3-stem small{ font-size:5px }
+  .kpi{ grid-template-columns:1fr 1fr }
+}
+
+/* landscape phones: HUD hero mode */
+@media(max-height:480px) and (orientation:landscape){
+  #hud .hrow{ flex-direction:row }
+  #hud .hcell{ padding:4px }
+  #hud .hcell b{ font-size:38px }
+  #hudBar button{ min-height:40px }
+  #mobileBar{ display:none !important }
+}
+
+/* reduce motion respect */
+@media(prefers-reduced-motion:reduce){
+  .dot, .breath-ring, .wave-mini.playing i{ animation:none !important }
+  .v3-stem .meter i{ transition:none }
+}
+.card.collapsed > *:not(.card-h){ display:none }
 </style>
 </head>
 <body>
@@ -402,6 +520,12 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <script src="PaceBeatDJEngine.js?v=3"></script>
 <script src="PaceBeatV3.js?v=3"></script>
 <script src="PaceBeatRecovery.js?v=3"></script>
+<div id="mobileBar" role="navigation" aria-label="Quick actions">
+<span class="mb-badge" id="mbBadge">STANDBY · 127 BPM</span>
+<button class="mb-go" id="mbStart">▶ START</button>
+<button class="mb-lap" id="mbLap">LAP</button>
+<button class="mb-hud" id="mbHud">HUD</button>
+</div>
 <script>
 const $=s=>document.querySelector(s)
 const midi2freq=m=>440*Math.pow(2,(m-69)/12)
@@ -1235,6 +1359,39 @@ drawViz()
 selectTrack('fhouse')
 if(location.search.includes('autostart')) setTimeout(()=>$('#startBtn').click(),600)
 if('serviceWorker' in navigator && location.protocol==='https:'){ addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}) }) }
+// ===== MOBILE BAR WIRING =====
+$('#mbStart').onclick=()=>$('#startBtn').click()
+$('#mbLap').onclick=()=>{ triggerLap(); if(navigator.vibrate) navigator.vibrate(30) }
+$('#mbHud').onclick=()=>{ $('#hud').classList.add('on'); ensureAudio(); if(!isPlaying) startAudio() }
+setInterval(()=>{
+ const mb=$('#mbBadge'); if(!mb) return
+ const hr=bleHr? ' ♥'+bleHr : ''
+ mb.textContent= (isRunning? 'RUNNING':'STANDBY')+' · '+Math.round(effectiveBPM)+' BPM'+hr
+},800)
+// ===== MOBILE CARD COLLAPSE (tap header to fold) =====
+(function(){
+ if(!matchMedia('(max-width:820px)').matches) return
+ const keep=['400m Track Engine'] // keep primary card always open
+ document.querySelectorAll('.card').forEach(card=>{
+  const h=card.querySelector('.card-h'); if(!h||keep.some(k=>h.textContent.includes(k))) return
+  h.style.cursor='pointer'; h.style.userSelect='none'
+  const arrow=document.createElement('span'); arrow.textContent='▾'; arrow.style.opacity='.5'
+  h.appendChild(arrow)
+  h.addEventListener('click',e=>{
+   if(e.target.closest('button,input,label,a')) return
+   const body=[...card.children].filter(el=>el!==h)
+   const open=card.classList.toggle('collapsed')
+   arrow.textContent=open?'▸':'▾'
+   body.forEach(el=>{ el.style.display=open?'none':'' })
+  })
+ })
+ // auto-collapse dense secondary cards on load
+ ;['Cadence','Motion Tracker','Splits','Recovery Lab'].forEach(name=>{
+  document.querySelectorAll('.card .card-h').forEach(h=>{
+   if(h.textContent.includes(name)) h.click()
+  })
+ })
+})()
 </script>
 </body>
 </html>
