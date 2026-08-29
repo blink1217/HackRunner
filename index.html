@@ -218,9 +218,8 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="sel-panel">
 <div><div class="sel-name bebas" id="selName">TECH HOUSE — F</div><div class="sel-meta" id="selMeta">127 BPM · F MAJOR · 4-ON-THE-FLOOR · STEM LOCKED</div></div>
 <div class="wave-mini" id="waveMini"></div>
-<div class="sel-actions">
-<button class="pv-btn" id="previewBtn">▶ Preview Track</button>
-<label class="lock-toggle"><input type="checkbox" id="lockStride" checked> 🔒 Lock to Stride</label>
+<div class="sel-actions" id="previewBtns"></div>
+<div class="sel-actions"><label class="lock-toggle"><input type="checkbox" id="lockStride" checked> 🔒 Lock to Stride</label></div>
 </div>
 <div class="sel-energy">🎚 Dynamic Energy: <b id="energyLabel">HIGH</b> · <span id="stemLockNote">stems follow your pace</span></div>
 </div>
@@ -571,17 +570,20 @@ $('#lapBtn').onclick=triggerLap
 $('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; gpsDistance=0; gpsLapBase=0; gpsSpeed=0; gpsLastPos=null; gpsRunningState='STATIONARY'; stopTrackLoop(); updateGpsUI(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — 100m / 200m / 400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
 $('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
 const PREVIEWS={
- fhouse:{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3',label:'free preview · 125 BPM'},
- acid:{kind:'yt',src:'C1EPUeAVHZw',label:'raw & untamed · 130 BPM'},
- deep:{kind:'yt',src:'4Ty5RJuZbd0',label:'backing loop · 124 BPM'},
- afro:{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3',label:'free preview · 122 BPM'}
+ fhouse:[
+  {kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3',label:'instrumental · 125 BPM'},
+  {kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/227239594/preview.mp3',label:'vocal mix · choir · 128 BPM',tag:'♪ Vocal Mix'}
+ ],
+ acid:[{kind:'yt',src:'C1EPUeAVHZw',label:'raw & untamed · 130 BPM'}],
+ deep:[{kind:'yt',src:'4Ty5RJuZbd0',label:'backing loop · 124 BPM'}],
+ afro:[{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3',label:'vocal mix · 122 BPM',tag:'♪ Vocal Mix'}]
 }
 const waveMini=$('#waveMini'); for(let i=0;i<24;i++){ const b=document.createElement('i'); b.style.animationDelay=(i*0.04)+'s'; waveMini.appendChild(b)}
-let previewActive=false
+let previewActive=false, previewBtnEl=null
 function stopPreview(){
  previewActive=false
  waveMini.classList.remove('playing')
- $('#previewBtn').classList.remove('playing'); $('#previewBtn').textContent='▶ Preview Track'
+ if(previewBtnEl){ previewBtnEl.classList.remove('playing') }
  const ab=$('#audiobox'); const a=ab.querySelector('audio'); if(a){ a.pause() }
  $('#ytbox').style.display='none'; $('#ytbox').innerHTML=''
 }
@@ -590,10 +592,37 @@ function updateSelPanel(){
  if(!st) return
  $('#selName').textContent=st.name
  $('#selMeta').textContent=st.bpm+' BPM · '+(st.key||'—')+' · STEM LOCKED'
- const pv=PREVIEWS[currentTrack]
- const btn=$('#previewBtn')
- if(currentTrack==='upload'){ btn.textContent=UPLOAD?'▶ Preview Synced':'⬆ Pick Audio File' }
- else { btn.textContent='▶ Preview Track — '+pv.label }
+ const holder=$('#previewBtns'); holder.innerHTML=''
+ if(currentTrack==='upload'){
+  const btn=document.createElement('button'); btn.className='pv-btn'
+  btn.textContent=UPLOAD?'▶ Preview Synced':'⬆ Pick Audio File'
+  btn.onclick=()=>{
+   if(!UPLOAD){ $('#fileInput').click(); return }
+   if(!previewActive){ ensureAudio(); startTrackLoop(); previewActive=true; waveMini.classList.add('playing'); btn.classList.add('playing'); btn.textContent='⏸ Stop Preview'; previewBtnEl=btn }
+   else stopPreview()
+  }
+  holder.appendChild(btn)
+ } else {
+  (PREVIEWS[currentTrack]||[]).forEach(pv=>{
+   const btn=document.createElement('button'); btn.className='pv-btn'
+   btn.textContent=(pv.tag||'▶ Preview')+' — '+pv.label
+   btn.onclick=()=>{
+    if(previewActive&&previewBtnEl===btn){ stopPreview(); return }
+    stopPreview()
+    if(pv.kind==='yt'){
+     const yt=$('#ytbox'); yt.style.display='block'; $('#audiobox').style.display='none'
+     yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+pv.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
+    } else {
+     const ab=$('#audiobox'); ab.style.display='block'; $('#ytbox').style.display='none'
+     const a=ab.querySelector('audio'); a.src=pv.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
+     a.onended=stopPreview
+    }
+    previewActive=true; waveMini.classList.add('playing')
+    btn.classList.add('playing'); previewBtnEl=btn
+   }
+   holder.appendChild(btn)
+  })
+ }
  $('#uploadRow').style.display=currentTrack==='upload'?'flex':'none'
  $('#syncRow').style.display=currentTrack==='upload'?'flex':'none'
  $('#stemLockNote').textContent= currentTrack==='upload'&&$('#syncBpm').checked? 'custom track stretched to stride' : currentTrack==='upload'? 'native speed' : 'stems follow your pace'
@@ -615,26 +644,6 @@ function selectTrack(id){
  if(adaptive||liveBPM==null){ setBPMUI(st.bpm); if(isPlaying&&delayNode) delayNode.delayTime.value=60/st.bpm/4*3}
  if(currentTrack==='upload'){ applyMix(); if($('#syncBpm').checked) scheduleRestretch(); if(isPlaying&&mixMode>0) startTrackLoop() }
  else { stopTrackLoop(); if(mixMode>0){ mixMode=0; applyMix() } }
-}
-$('#previewBtn').onclick=()=>{
- if(currentTrack==='upload'){
-  if(!UPLOAD){ $('#fileInput').click(); return }
-  if(!previewActive){ ensureAudio(); startTrackLoop(); previewActive=true; waveMini.classList.add('playing'); $('#previewBtn').classList.add('playing'); $('#previewBtn').textContent='⏸ Stop Preview' }
-  else { stopPreview() }
-  return
- }
- const pv=PREVIEWS[currentTrack]; if(!pv) return
- if(previewActive){ stopPreview(); return }
- if(pv.kind==='yt'){
-  const yt=$('#ytbox'); yt.style.display='block'; $('#audiobox').style.display='none'
-  yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+pv.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
- } else {
-  const ab=$('#audiobox'); ab.style.display='block'; $('#ytbox').style.display='none'
-  const a=ab.querySelector('audio'); a.src=pv.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
-  a.onended=stopPreview
- }
- previewActive=true; waveMini.classList.add('playing')
- $('#previewBtn').classList.add('playing'); $('#previewBtn').textContent='⏸ Stop Preview'
 }
 setInterval(()=>{
  const st=djEngine? djEngine.state : (pushAmount>1?'SURGE':pushAmount>0?'BEHIND_PACE':'ON_PACE')
