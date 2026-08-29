@@ -96,6 +96,28 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .stepbar{display:flex;gap:1px;padding:0 12px 12px;height:14px}
 .stepbar i{flex:1;background:#222;border-radius:1px}
 .stepbar i.cur{background:var(--acid)}
+/* lap distance selector */
+.lap-dist{display:flex;gap:6px;align-items:center;padding:0 14px 12px}
+.lap-dist span{font-size:9px;letter-spacing:.12em;opacity:.5;text-transform:uppercase;margin-right:4px}
+.lap-dist button{flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#0f0f0f;color:#fff;font-weight:800;font-size:11px;letter-spacing:.06em;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.lap-dist button.active{border-color:var(--acid);color:var(--acid);background:#141a00}
+/* mix mode */
+.mix-row{display:flex;gap:6px;align-items:center}
+.mix-row button{flex:1;padding:9px;border-radius:8px;border:1px solid #333;background:#0f0f0f;color:#fff;font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.mix-row button.active{border-color:var(--pink);color:#fff;background:linear-gradient(135deg,#2a0a1a,#0f0f0f);box-shadow:0 0 10px rgba(255,46,147,.25)}
+/* sample tracks */
+.samples{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+@media(max-width:480px){.samples{grid-template-columns:1fr}}
+.sample-btn{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;color:#fff;font-family:'Space Grotesk',sans-serif;transition:.12s}
+.sample-btn:hover{border-color:var(--cyan)}
+.sample-btn b{font-family:'Bebas Neue';font-size:15px;letter-spacing:.03em;display:block}
+.sample-btn span{font-size:10px;opacity:.55}
+.sample-btn .playic{width:28px;height:28px;border-radius:50%;background:var(--cyan);color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.ytbox{position:relative;padding-top:56.25%;margin:0 12px 12px;border-radius:12px;overflow:hidden;background:#000}
+.ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.sample-links{display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap}
+.sample-links a{font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid #2a2a2a;padding:5px 10px;border-radius:999px;color:#fff;opacity:.7;text-decoration:none}
+.sample-links a:hover{opacity:1;border-color:var(--acid)}
 </style>
 </head>
 <body>
@@ -129,9 +151,10 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 <div style="padding:0 14px 14px;display:flex;gap:8px">
 <button class="btn btn-go" id="startBtn">▶ START RUN</button>
-<button class="btn btn-lap" id="lapBtn" disabled>LAP +100M</button>
+<button class="btn btn-lap" id="lapBtn" disabled>LAP +400M</button>
 <button class="btn btn-ghost" id="resetBtn">RESET</button>
 </div>
+<div class="lap-dist"><span>LAP DIST</span><button data-d="100">100M</button><button data-d="200">200M</button><button data-d="400" class="active">400M</button></div>
 </div>
 
 <div class="card">
@@ -143,6 +166,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TARGET BPM</span><input type="range" id="targetBpm" min="100" max="210" value="127"><b class="mono" id="targetBpmVal" style="min-width:42px;text-align:right">127</b></div>
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TRACK PACE</span><input type="range" id="targetPace" min="60" max="240" value="90"><b class="mono" id="targetPaceVal" style="min-width:52px;text-align:right">1:30</b><span class="mono" style="font-size:10px;opacity:.5">/400m</span></div>
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">INTENSITY</span><input type="range" id="intensity" min="0" max="100" value="65"><b class="mono" id="intensityVal" style="min-width:42px;text-align:right">65%</b></div>
+<div class="mix-row" id="mixRow"><button data-mix="0" class="active">♫ SYNTH</button><button data-mix="1">SYNTH + TRACK</button><button data-mix="2">TRACK ONLY</button></div>
 <label style="display:flex;gap:8px;align-items:center;font-size:12px"><input type="checkbox" id="adaptive" checked> <b>Adaptive</b> <span style="opacity:.6">— auto-shift BPM + layers when you're off split</span></label>
 </div>
 </div>
@@ -176,12 +200,29 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 </div>
 <div class="upload-row"><button id="uploadBtn">⬆ UPLOAD AUDIO</button><span class="ufile" id="ufile">mp3 / wav / m4a / ogg — analyzed in-browser</span></div>
 <input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac" hidden>
+<div class="upload-row"><label style="display:flex;gap:8px;align-items:center;font-size:11px;opacity:.8"><input type="checkbox" id="syncBpm" checked> <b>SYNC TO BPM</b> <span style="opacity:.6">— time-stretch your track to the TARGET BPM slider (pitch stays)</span></label></div>
 <div class="analyzer" id="analyzer" style="display:none"><span class="an-chip">BPM <b id="anBpm">—</b></span><span class="an-chip">KEY <b id="anKey">—</b></span><span class="an-chip">STYLE <b id="anStyle">—</b></span><span class="an-chip">STATUS <b id="anStatus">decoding…</b></span></div>
 </div>
 
 <div class="card">
+<div class="card-h"><span>◉ SAMPLE TRACKS — FREE / ROYALTY-FREE</span><span class="badge" style="background:var(--cyan);color:#000">PER GENRE</span></div>
+<div class="samples" id="samples">
+<button class="sample-btn" data-kind="audio" data-src="https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3"><div><b>TECH HOUSE</b><span>125 BPM · free preview</span></div><i class="playic">▶</i></button>
+<button class="sample-btn" data-kind="yt" data-src="V_C5ceJtXsc"><div><b>TECH HOUSE</b><span>127 BPM · drums loop</span></div><i class="playic">▶</i></button>
+<button class="sample-btn" data-kind="yt" data-src="C1EPUeAVHZw"><div><b>ACID TECHNO</b><span>130 BPM · raw &amp; untamed</span></div><i class="playic">▶</i></button>
+<button class="sample-btn" data-kind="yt" data-src="4Ty5RJuZbd0"><div><b>DEEP HOUSE</b><span>124 BPM · backing loop</span></div><i class="playic">▶</i></button>
+<button class="sample-btn" data-kind="audio" data-src="https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3"><div><b>AFRO HOUSE</b><span>122 BPM · free preview</span></div><i class="playic">▶</i></button>
+<button class="sample-btn" data-kind="yt" data-src="zbXdR3RgiV0"><div><b>TECHNO</b><span>130 BPM · royalty-free</span></div><i class="playic">▶</i></button>
+</div>
+<div id="ytbox" class="ytbox" style="display:none"></div>
+<div id="audiobox" style="display:none;padding:0 12px 12px"><audio controls style="width:100%"></audio></div>
+<div class="sample-links"><a href="https://pixabay.com/music/search/tech%20house/" target="_blank">MORE TECH HOUSE — PIXABAY</a><a href="https://pixabay.com/music/search/afro%20house/" target="_blank">MORE AFRO HOUSE — PIXABAY</a><a href="https://pixabay.com/music/search/deep%20house/" target="_blank">MORE DEEP — PIXABAY</a><a href="https://pixabay.com/music/search/130%20bpm%20techno/" target="_blank">MORE TECHNO — PIXABAY</a></div>
+<div style="padding:0 12px 12px;font-size:10px;opacity:.5">Free to use — previews &amp; royalty-free sources. Want it on the track? Download, then ⬆ UPLOAD AUDIO above and SYNC TO BPM will stretch it to your cadence.</div>
+</div>
+
+<div class="card">
 <div class="card-h"><span>SPLITS & GHOST</span><span class="badge" style="background:var(--cyan);color:#000">SPLITCLASH</span></div>
-<div class="splits"><table><thead><tr><th>LAP</th><th>SPLIT</th><th>TARGET</th><th>Δ</th></tr></thead><tbody id="splitsBody"><tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr></tbody></table></div>
+<div class="splits"><table><thead><tr><th>LAP</th><th>DIST</th><th>SPLIT</th><th>TARGET</th><th>Δ</th></tr></thead><tbody id="splitsBody"><tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/200m/400m</td></tr></tbody></table></div>
 <div style="padding:0 14px 14px;display:flex;gap:8px">
 <button class="btn btn-ghost" id="ghostBtn" style="padding:10px;font-size:11px">👻 GHOST: OFF</button>
 <button class="btn btn-ghost" id="shareBtn" style="padding:10px;font-size:11px">SHARE SPLIT</button>
@@ -214,7 +255,8 @@ let nextNote=0, timerID, current16=0, stepIndex=0
 let isPlaying=false, isRunning=false
 let targetBPM=127, effectiveBPM=127, intensity=65, adaptive=true
 let liveBPM=null, lapStart=0, runStart=0, laps=[]
-let dist=0, lapInterval=null, currentTrack='fhouse'
+let dist=0, lapInterval=null, currentTrack='fhouse', lapDist=400
+let synthBus, trackBus, trackGain, trackSource=null, mixMode=0, restretchTimer=null
 const targetPaceEl=$('#targetPace'), targetBpmEl=$('#targetBpm')
 const TRACKS={
  fhouse:{bpm:127,name:'TECH HOUSE — F',key:'F MAJOR',root:41,bassRoot:29,scale:[0,2,4,5,7,9,11],
@@ -253,9 +295,9 @@ const stepbar=$('#stepbar'); for(let i=0;i<64;i++) stepbar.appendChild(document.
 const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i'); b.style.height='6px'; viz.appendChild(b)}
 function fmt(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(Math.floor((sec%1)*10))}
 function paceFmt(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0')}
-function getTargetSec(){ return parseInt(targetPaceEl.value,10)}
+function getTargetSec(){ return parseInt(targetPaceEl.value,10)*lapDist/400}
 function setBPMUI(b){ targetBPM=b; $('#targetBpm').value=b; $('#targetBpmVal').textContent=b; $('#tgtBpm2').innerHTML=b+' <small>BPM</small>'; $('#bpmBadge').textContent=b+' BPM • '+(isPlaying?'PLAYING':'READY')}
-$('#targetBpm').addEventListener('input',e=>setBPMUI(parseInt(e.target.value,10)))
+$('#targetBpm').addEventListener('input',e=>{ setBPMUI(parseInt(e.target.value,10)); scheduleRestretch()})
 $('#targetPace').addEventListener('input',e=>{const v=parseInt(e.target.value,10);$('#targetPaceVal').textContent=paceFmt(v);$('#splitDelta').textContent='— target '+paceFmt(v)})
 $('#intensity').addEventListener('input',e=>{intensity=parseInt(e.target.value,10);$('#intensityVal').textContent=intensity+'%'})
 $('#adaptive').addEventListener('change',e=>adaptive=e.target.checked)
@@ -265,23 +307,33 @@ function ensureAudio(){
   master=audioCtx.createGain(); master.gain.value=.9
   const comp=audioCtx.createDynamicsCompressor(); comp.threshold.value=-14; comp.ratio.value=6
   master.connect(comp).connect(audioCtx.destination)
+  synthBus=audioCtx.createGain(); synthBus.gain.value=1; synthBus.connect(master)
+  trackBus=audioCtx.createGain(); trackBus.gain.value=0; trackBus.connect(master)
   analyser=audioCtx.createAnalyser(); analyser.fftSize=64; analyser.smoothingTimeConstant=.6; master.connect(analyser)
   reverb=audioCtx.createConvolver();
   const len=Math.floor(audioCtx.sampleRate*1.6), ir=audioCtx.createBuffer(2,len,audioCtx.sampleRate)
   for(let c=0;c<2;c++){const d=ir.getChannelData(c); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
-  reverb.buffer=ir; const revGain=audioCtx.createGain(); revGain.gain.value=.4; reverb.connect(revGain).connect(master); reverbGain=revGain
+  reverb.buffer=ir; const revGain=audioCtx.createGain(); revGain.gain.value=.4; reverb.connect(revGain).connect(synthBus); reverbGain=revGain
   delay=audioCtx.createDelay(1); delay.delayTime.value=60/127/4*3; const fb=audioCtx.createGain(); fb.gain.value=.32; const dg=audioCtx.createGain(); dg.gain.value=.35
   const lp=audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3800
-  delay.connect(lp).connect(fb).connect(delay); delay.connect(dg).connect(master)
+  delay.connect(lp).connect(fb).connect(delay); delay.connect(dg).connect(synthBus)
   delayNode=delay
   noiseBuf=audioCtx.createBuffer(1,audioCtx.sampleRate,audioCtx.sampleRate); const nd=noiseBuf.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1
  }
  if(audioCtx.state==='suspended') audioCtx.resume()
 }
+function applyMix(){
+ if(!synthBus) return
+ if(mixMode===0){ synthBus.gain.value=1; if(trackBus) trackBus.gain.value=0 }
+ else if(mixMode===1){ synthBus.gain.value=.45; if(trackBus) trackBus.gain.value=UPLOAD? .95:0 }
+ else { synthBus.gain.value=0; if(trackBus) trackBus.gain.value=UPLOAD? 1:0 }
+ document.querySelectorAll('#mixRow button').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.mix,10)===mixMode))
+}
+document.querySelectorAll('#mixRow button').forEach(b=>b.onclick=()=>{ mixMode=parseInt(b.dataset.mix,10); ensureAudio(); applyMix(); if(UPLOAD&&mixMode>0&&isPlaying&&currentTrack==='upload') startTrackLoop()})
 let reverbGain, delayNode
-function noise(t,dur,hpFreq,vel){ const src=audioCtx.createBufferSource(); src.buffer=noiseBuf; const f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=hpFreq; const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); src.connect(f).connect(g).connect(master); src.start(t); src.stop(t+dur+.02)}
-function kick(t,vel=1){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(155,t); o.frequency.exponentialRampToValueAtTime(45,t+.1); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.connect(g).connect(master); o.start(t); o.stop(t+.32)}
-function kickSoft(t,vel=.8){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(50,t+.16); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.45); o.connect(g).connect(master); o.start(t); o.stop(t+.5)}
+function noise(t,dur,hpFreq,vel){ const src=audioCtx.createBufferSource(); src.buffer=noiseBuf; const f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=hpFreq; const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+dur); src.connect(f).connect(g).connect(synthBus); src.start(t); src.stop(t+dur+.02)}
+function kick(t,vel=1){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(155,t); o.frequency.exponentialRampToValueAtTime(45,t+.1); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.connect(g).connect(synthBus); o.start(t); o.stop(t+.32)}
+function kickSoft(t,vel=.8){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(50,t+.16); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.45); o.connect(g).connect(synthBus); o.start(t); o.stop(t+.5)}
 function hat(t,open,vel=1){ noise(t,open?.4:.055,open?6000:8200,vel*(open?.18:.3))}
 function clap(t,vel=1){ for(let i=0;i<3;i++) noise(t+i*.012,.07,1200,vel*(.3-i*.07))}
 function bass(t,midi,vel,len){
@@ -289,26 +341,26 @@ function bass(t,midi,vel,len){
  o.type='sawtooth'; o.frequency.value=midi2freq(midi); o2.type='sine'; o2.frequency.value=midi2freq(midi)/2
  const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(420,t); f.frequency.exponentialRampToValueAtTime(140,t+len)
  g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+len)
- o.connect(f).connect(g).connect(master); o2.connect(g); o.start(t); o2.start(t); o.stop(t+len+.05); o2.stop(t+len+.05)}
+ o.connect(f).connect(g).connect(synthBus); o2.connect(g); o.start(t); o2.start(t); o.stop(t+len+.05); o2.stop(t+len+.05)}
 function acidNote(t,midi,vel,accent,len){
  const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sawtooth'; o.frequency.value=midi2freq(midi)
  const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.Q.value=18
  f.frequency.setValueAtTime(200,t); f.frequency.exponentialRampToValueAtTime(accent?3800:1800,t+len*.7)
  g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+len)
- o.connect(f).connect(g).connect(master); o.start(t); o.stop(t+len+.05)}
-function chordStab(t,notes,vel){ const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1100; f.Q.value=.8; g.connect(f).connect(master); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.connect(f); o.start(t); o.stop(t+.55)})}
-function padChord(t,notes,vel,len=1.2){ const g=audioCtx.createGain(); g.gain.setValueAtTime(.001,t); g.gain.linearRampToValueAtTime(vel,t+.35); g.gain.linearRampToValueAtTime(.001,t+len); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1400; g.connect(f).connect(master); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.detune.value=(Math.random()*8-4); o.connect(f); o.start(t); o.stop(t+len+.1)})}
-function pluck(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=midi2freq(midi); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2400; g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); o.connect(f).connect(g).connect(master); g.connect(reverb); o.start(t); o.stop(t+.55)}
+ o.connect(f).connect(g).connect(synthBus); o.start(t); o.stop(t+len+.05)}
+function chordStab(t,notes,vel){ const g=audioCtx.createGain(); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1100; f.Q.value=.8; g.connect(f).connect(synthBus); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.connect(f); o.start(t); o.stop(t+.55)})}
+function padChord(t,notes,vel,len=1.2){ const g=audioCtx.createGain(); g.gain.setValueAtTime(.001,t); g.gain.linearRampToValueAtTime(vel,t+.35); g.gain.linearRampToValueAtTime(.001,t+len); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=1400; g.connect(f).connect(synthBus); g.connect(reverb); notes.forEach(n=>{ const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=midi2freq(n); o.detune.value=(Math.random()*8-4); o.connect(f); o.start(t); o.stop(t+len+.1)})}
+function pluck(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='triangle'; o.frequency.value=midi2freq(midi); const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2400; g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.5); o.connect(f).connect(g).connect(synthBus); g.connect(reverb); o.start(t); o.stop(t+.55)}
 function trumpet(t,midi,vel,len=.4){
  const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.Q.value=2.2
  f.frequency.setValueAtTime(500,t); f.frequency.exponentialRampToValueAtTime(2400,t+.08); f.frequency.setValueAtTime(2400,t+.09)
  const g=audioCtx.createGain(); g.gain.setValueAtTime(.001,t); g.gain.linearRampToValueAtTime(vel,t+.03); g.gain.setValueAtTime(vel*.8,t+.06); g.gain.exponentialRampToValueAtTime(.001,t+len)
- f.connect(g).connect(master); g.connect(reverb); g.connect(delayNode)
+ f.connect(g).connect(synthBus); g.connect(reverb); g.connect(delayNode)
  const vib=audioCtx.createOscillator(), vg=audioCtx.createGain(); vib.frequency.value=5.6; vg.gain.value=6; vib.connect(vg).connect(f.frequency); vib.start(t); vib.stop(t+len)
  const o=audioCtx.createOscillator(), o2=audioCtx.createOscillator(); o.type='sawtooth'; o2.type='triangle'
  o.frequency.setValueAtTime(midi2freq(midi)*1.02,t); o.frequency.exponentialRampToValueAtTime(midi2freq(midi),t+.05); o2.frequency.value=midi2freq(midi)
  o.connect(f); o2.connect(f); o.start(t); o2.start(t); o.stop(t+len+.05); o2.stop(t+len+.05)}
-function conga(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(midi2freq(midi),t); o.frequency.exponentialRampToValueAtTime(midi2freq(midi)*.5,t+.09); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.22); o.connect(g).connect(master); o.start(t); o.stop(t+.25)}
+function conga(t,midi,vel){ const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(midi2freq(midi),t); o.frequency.exponentialRampToValueAtTime(midi2freq(midi)*.5,t+.09); g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(.001,t+.22); o.connect(g).connect(synthBus); o.start(t); o.stop(t+.25)}
 function shaker(t,vel){ noise(t,.04,7000,vel*.12)}
 function clave(t,vel){ noise(t,.05,2500,vel*.25)}
 function ride(t,vel){ noise(t,.5,8000,vel*.1)}
@@ -358,8 +410,10 @@ function startAudio(){
  $('#bpmBadge').textContent=Math.round(effectiveBPM)+' BPM • PLAYING'
  $('#modeBadge').textContent='BEAT LIVE'
  $('#modeBadge').className='badge badge-acid'
+ applyMix()
+ if(currentTrack==='upload'&&mixMode>0) startTrackLoop()
 }
-function stopAudio(){ isPlaying=false; clearInterval(timerID); $('#metronomeBtn').textContent='🔊 SOUND ON'}
+function stopAudio(){ isPlaying=false; clearInterval(timerID); stopTrackLoop(); $('#metronomeBtn').textContent='🔊 SOUND ON'}
 function updateAdaptive(){
  if(!adaptive||!isRunning||liveBPM==null){ effectiveBPM=targetBPM; pushAmount=0; return}
  const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
@@ -393,8 +447,8 @@ function tick(){
  else if(ghostProg<.71){ gx=10+200-(ghostProg-.5)/.21*130; gy=150}
  else { const p=(ghostProg-.71)/.29, a=Math.PI+p*Math.PI; gx=10+70+Math.cos(a)*70; gy=10+70+Math.sin(a)*70}
  const g=$('#ghostDot'); if(ghostOn){ g.setAttribute('cx',gx); g.setAttribute('cy',gy); g.style.display='block'} else g.style.display='none'
- dist=laps.length*400+prog*400
- $('#distLabel').textContent=Math.round(dist)+' / '+((laps.length+1)*400)+'m'
+  dist=laps.length*lapDist+prog*lapDist
+  $('#distLabel').textContent=Math.round(dist)+'m / '+((laps.length+1)*lapDist)+'m'
  const deltaSec=elapsed-tgt*prog
  const ab=$('#aheadBehind')
  if(Math.abs(deltaSec)<.4){ ab.textContent='±0.0s'; ab.style.color='var(--acid)'; $('#aheadLabel').textContent='on pace ✓'; $('#aheadLabel').style.color='var(--acid)'}
@@ -412,11 +466,11 @@ function applyCadence(bpm){
  liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'
  const el=$('#liveDelta'), tgt=parseInt($('#targetBpm').value,10), d=bpm-tgt
  if(Math.abs(d)<=3){ el.textContent='locked ✓'; el.className='delta up'} else if(d<0){ el.textContent=d+' BPM — speed up!'; el.className='delta down'} else { el.textContent='+'+d+' BPM — ease'; el.className='delta up'}
- if(adaptive){ setBPMUI(bpm) }
+ if(adaptive){ setBPMUI(bpm); scheduleRestretch() }
  ensureAudio(); if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20)
  playPing(800)
 }
-function playPing(f){ const t=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=f; o.type='square'; g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.06); o.connect(g).connect(master); o.start(t); o.stop(t+.08)}
+function playPing(f){ const t=audioCtx.currentTime, o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.frequency.value=f; o.type='square'; g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.06); o.connect(g).connect(synthBus); o.start(t); o.stop(t+.08)}
 $('#tapBtn').addEventListener('click',()=>{ const b=cadenceFromTaps(Date.now()); if(b) applyCadence(b)})
 let motionActive=false
 $('#motionBtn').onclick=async()=>{
@@ -443,16 +497,16 @@ $('#lapBtn').onclick=()=>{
  if(!isRunning) return
  const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), delta=elapsed-tgt
  laps.push({split:elapsed,delta}); lapStart=Date.now()
- $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × 400m'
+ $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × '+lapDist+'m · '+Math.round(laps.length*lapDist)+'m total'
  const tbody=$('#splitsBody'); if(laps.length===1) tbody.innerHTML=''
  const tr=document.createElement('tr')
- tr.innerHTML='<td class="bebas">'+laps.length+'</td><td>'+fmt(elapsed)+'</td><td>'+paceFmt(tgt)+'</td><td><span class="pill '+(Math.abs(delta)<1.2?'pill-good':'pill-bad')+'">'+(delta>0?'+':'')+delta.toFixed(1)+'s</span></td>'
+ tr.innerHTML='<td class="bebas">'+laps.length+'</td><td>'+lapDist+'m</td><td>'+fmt(elapsed)+'</td><td>'+paceFmt(tgt)+'</td><td><span class="pill '+(Math.abs(delta)<1.2?'pill-good':'pill-bad')+'">'+(delta>0?'+':'')+delta.toFixed(1)+'s</span></td>'
  tbody.prepend(tr)
-  if(navigator.vibrate) navigator.vibrate([30,40,30])
-  ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
+ if(navigator.vibrate) navigator.vibrate([30,40,30])
+ ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
  if(window.speechSynthesis){ const u=new SpeechSynthesisUtterance(delta<0?'Lap '+laps.length+', ahead '+Math.abs(delta).toFixed(1):'Lap '+laps.length+', behind '+delta.toFixed(1)); u.rate=1.1; speechSynthesis.speak(u)}
 }
-$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
+$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; stopTrackLoop(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/200m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
 $('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
 document.querySelectorAll('.track-btn').forEach(btn=>btn.onclick=()=>selectTrack(btn.dataset.track))
 function selectTrack(id){
@@ -464,6 +518,8 @@ function selectTrack(id){
  $('#bpmBadge').textContent=st.bpm+' BPM • '+(isPlaying?'PLAYING':'READY')
  $('#anStyle').textContent=st.name
  if(adaptive||liveBPM==null){ setBPMUI(st.bpm); if(isPlaying&&delayNode) delayNode.delayTime.value=60/st.bpm/4*3}
+ if(currentTrack==='upload'){ applyMix(); if($('#syncBpm').checked) scheduleRestretch(); if(isPlaying&&mixMode>0) startTrackLoop() }
+ else { stopTrackLoop(); if(mixMode>0){ mixMode=0; applyMix() } }
 }
 function detectBPM(buffer){
  const data=buffer.getChannelData(0), sr=buffer.sampleRate
@@ -497,14 +553,77 @@ $('#fileInput').onchange=e=>{
     const style=bpm>=132?'acid':bpm>=116?'fhouse':bpm>=108?'deep':'afro'
     $('#anStyle').textContent=TRACKS[style].name
     $('#anKey').textContent=TRACKS[style].key
-    UPLOAD={...TRACKS[style], bpm, name:file.name.replace(/\.[^.]+$/,'').slice(0,14).toUpperCase(), key:TRACKS[style].key}
-    $('#anStatus').textContent='ready ✓'
+    UPLOAD={...TRACKS[style], bpm, name:file.name.replace(/\.[^.]+$/,'').slice(0,14).toUpperCase(), key:TRACKS[style].key, buffer:buf}
     selectTrack('upload')
     setBPMUI(bpm)
+    if($('#syncBpm').checked) scheduleRestretch()
+    applyMix()
   }catch(err){ $('#anStatus').textContent='decode failed — try mp3/wav'; console.error(err)}
  }
  fr.readAsArrayBuffer(file)
 }
+function timeStretch(buf, ratio){
+ if(Math.abs(ratio-1)<0.01) return buf
+ const sr=buf.sampleRate
+ const grain=Math.floor(sr*0.04), hopIn=Math.floor(sr*0.010)
+ const hopOut=Math.max(1,Math.round(hopIn*ratio))
+ const outLen=Math.max(1,Math.floor(buf.length/ratio))
+ const fade=new Float32Array(grain)
+ for(let i=0;i<grain;i++){ const p=i/grain; fade[i]=0.5-0.5*Math.cos(Math.PI*p) }
+ const out=audioCtx.createBuffer(buf.numberOfChannels,outLen,sr)
+ for(let c=0;c<buf.numberOfChannels;c++){
+  const src=buf.getChannelData(c), dst=out.getChannelData(c)
+  let opos=0
+  for(let ipos=0; ipos<buf.length&&opos<outLen; ipos+=hopIn){
+   const seg=Math.min(grain,buf.length-ipos,outLen-opos)
+   for(let j=0;j<seg;j++) dst[opos+j]+=src[ipos+j]*fade[j]
+   opos+=hopOut
+  }
+ }
+ return out
+}
+function scheduleRestretch(){
+ if(!UPLOAD||currentTrack!=='upload') return
+ clearTimeout(restretchTimer)
+ const bpm=$('#targetBpm').value
+ $('#anStatus').textContent='syncing to '+bpm+' BPM…'
+ restretchTimer=setTimeout(()=>{
+  const t0=performance.now()
+  UPLOAD.stretched=timeStretch(UPLOAD.buffer, targetBPM/UPLOAD.bpm)
+  UPLOAD.stretchBPM=targetBPM
+  $('#anStatus').textContent='synced ✓ '+(targetBPM)+' BPM ('+Math.round(performance.now()-t0)+'ms)'
+  if(isPlaying&&mixMode>0&&currentTrack==='upload') startTrackLoop()
+ },380)
+}
+function startTrackLoop(){
+ if(!UPLOAD) return
+ ensureAudio()
+ const old=trackSource
+ if(old){ try{ old.stop() }catch(e){} }
+ const src=audioCtx.createBufferSource()
+ src.buffer=UPLOAD.stretched||UPLOAD.buffer; src.loop=true
+ src.connect(trackBus)
+ src.start(audioCtx.currentTime+.03)
+ trackSource=src
+}
+function stopTrackLoop(){ if(trackSource){ try{ trackSource.stop() }catch(e){} trackSource=null } }
+$('#syncBpm').addEventListener('change',e=>{ if(e.target.checked){ scheduleRestretch() } })
+document.querySelectorAll('.lap-dist button').forEach(b=>b.onclick=()=>{
+ lapDist=parseInt(b.dataset.d,10)
+ document.querySelectorAll('.lap-dist button').forEach(x=>x.classList.toggle('active',x===b))
+ $('#lapBtn').textContent='LAP +'+lapDist+'M'
+ $('#splitDelta').textContent='— target '+paceFmt(parseInt(targetPaceEl.value,10)*lapDist/400)
+})
+document.querySelectorAll('.sample-btn').forEach(btn=>btn.onclick=()=>{
+ const yt=$('#ytbox'), ab=$('#audiobox')
+ if(btn.dataset.kind==='yt'){
+  yt.style.display='block'; ab.style.display='none'
+  yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+btn.dataset.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
+ } else {
+  ab.style.display='block'; yt.style.display='none'
+  const a=ab.querySelector('audio'); a.src=btn.dataset.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
+ }
+})
 function drawViz(){
  if(!analyser) { requestAnimationFrame(drawViz); return }
  const d=new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(d)
