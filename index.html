@@ -532,6 +532,7 @@ function applyCadence(bpm, src){
  if(Math.abs(d)<=3){ el.textContent='locked ✓'; el.className='delta up'} else if(d<0){ el.textContent=d+' BPM — speed up!'; el.className='delta down'} else { el.textContent='+'+d+' BPM — ease'; el.className='delta up'}
  if(adaptive){ setBPMUI(bpm); scheduleRestretch() }
  ensureAudio(); ensureDJEngine(); if(djEngine) djEngine.start()
+ djUpdate()
  if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20)
  playPing(800)
 }
