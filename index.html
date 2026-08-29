@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>PaceBeat — DJ-Cadence • The Running Hackathon</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--acid:#CCFF00;--pink:#FF2E93;--cyan:#00FFE0;--black:#0A0A0A;--gray:#1A1A1A}
+body{background:var(--black);color:#fff;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.bebas{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}
+.topbar{background:var(--acid);color:#000;display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.topbar span:last-child{background:#000;color:var(--acid);padding:2px 8px;border-radius:20px}
+header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:28px;line-height:1}
+.logo b{color:var(--acid)}
+.tag{font-size:10px;letter-spacing:.14em;opacity:.6;text-transform:uppercase;margin-top:2px}
+.hdr-right{text-align:right}
+.hdr-right div:first-child{font-size:11px;letter-spacing:.1em;opacity:.5}
+.live{font-size:13px;color:var(--acid);display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.dot{width:8px;height:8px;background:var(--acid);border-radius:50%;box-shadow:0 0 10px var(--acid);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.wrap{max-width:1100px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--gray);border:1px solid #2a2a2a;border-radius:16px;overflow:hidden}
+.card-h{padding:12px 14px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.badge{font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700;letter-spacing:.06em}
+.badge-acid{background:var(--acid);color:#000}
+.badge-pink{background:var(--pink);color:#fff}
+.track-wrap{padding:18px;display:flex;flex-direction:column;align-items:center}
+.track-svg{width:280px;height:160px}
+.lap-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:14px}
+.stat{background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:10px;text-align:center}
+.stat label{font-size:9px;letter-spacing:.12em;opacity:.5;text-transform:uppercase;display:block;margin-bottom:4px}
+.stat b{font-family:'Bebas Neue';font-size:28px;line-height:1}
+.stat small{font-size:10px;opacity:.6}
+.progress-bar{height:6px;background:#222;border-radius:999px;overflow:hidden;width:100%;margin:10px 0 2px}
+.progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acid),var(--cyan));width:0%;transition:width .2s}
+.controls{padding:14px;display:grid;gap:12px}
+.row{display:flex;gap:10px}
+.btn{flex:1;padding:14px;border-radius:12px;border:none;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-size:14px;transition:.12s}
+.btn:active{transform:scale(.98)}
+.btn-go{background:var(--acid);color:#000}
+.btn-go.playing{background:#fff}
+.btn-lap{background:var(--pink);color:#fff}
+.btn-ghost{background:#222;color:#fff;border:1px solid #333}
+.btn-ghost:disabled{opacity:.35}
+.slider-row{display:flex;align-items:center;gap:10px;background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:10px 12px}
+.slider-row input[type=range]{flex:1;accent-color:var(--acid)}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi>div{background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:12px}
+.kpi label{font-size:9px;letter-spacing:.12em;opacity:.5;text-transform:uppercase}
+.kpi b{font-family:'JetBrains Mono';font-size:22px;display:block;margin-top:4px}
+.kpi b small{font-size:11px;opacity:.6}
+.kpi .delta{font-size:11px;margin-top:4px;font-weight:700}
+.delta.up{color:var(--acid)} .delta.down{color:var(--pink)}
+.beat-grid{padding:12px;display:grid;grid-template-columns:repeat(16,1fr);gap:4px}
+.beat-grid i{height:22px;border-radius:4px;background:#222;display:block;transition:.08s}
+.beat-grid i.on{background:var(--acid);box-shadow:0 0 8px var(--acid)}
+.beat-grid i.active{transform:scaleY(1.5);background:#fff}
+.tap{width:100%;padding:18px;border-radius:12px;border:2px dashed #333;background:#0f0f0f;color:#fff;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.tap:active{background:#1a1a1a;border-color:var(--acid)}
+.splits{max-height:160px;overflow:auto;padding:0 12px 12px}
+.splits table{width:100%;font-size:12px;border-collapse:collapse}
+.splits th{font-size:9px;letter-spacing:.1em;opacity:.4;text-align:left;padding:6px 4px;border-bottom:1px solid #222}
+.splits td{padding:6px 4px;border-bottom:1px solid #111;font-family:'JetBrains Mono'}
+.pill{font-size:10px;padding:2px 6px;border-radius:20px;font-weight:700}
+.pill-good{background:rgba(204,255,0,.15);color:var(--acid);border:1px solid rgba(204,255,0,.3)}
+.pill-bad{background:rgba(255,46,147,.15);color:var(--pink);border:1px solid rgba(255,46,147,.3)}
+.viz{height:64px;display:flex;align-items:center;gap:2px;padding:0 12px}
+.viz i{flex:1;background:var(--acid);border-radius:2px;min-height:4px;transition:height .08s}
+.footer{max-width:1100px;margin:0 auto;padding:10px 16px 20px;display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid #2a2a2a;padding:6px 10px;border-radius:999px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="topbar"><span>⚡ The Running Hackathon — London Marathon Community Track • 10:30–20:30 BST</span><span>Crazy Filter Theme</span></div>
+<header>
+<div><div class="logo bebas"><b>PACE</b>BEAT <span style="font-size:13px;vertical-align:super;background:var(--pink);color:#fff;padding:2px 6px;border-radius:4px">DJ-CADENCE</span></div><div class="tag">Live Adaptive Audio Pacer • 400m Ghost Racing</div></div>
+<div class="hdr-right"><div>TAG • Luke Balabanovic & Siena Kinsale</div><div class="live"><span class="dot"></span> LIVE ON TRACK</div><div style="font-size:10px;opacity:.4;margin-top:2px">Healf • Sauna • Live DJ + Trumpet</div></div>
+</header>
+
+<div class="wrap">
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="card">
+<div class="card-h"><span>◆ 400M TRACK ENGINE</span><span class="badge badge-acid" id="modeBadge">STANDBY</span></div>
+<div class="track-wrap">
+<svg class="track-svg" viewBox="0 0 280 160">
+<rect x="10" y="10" width="260" height="140" rx="70" fill="none" stroke="#222" stroke-width="14"/>
+<rect x="10" y="10" width="260" height="140" rx="70" fill="none" stroke="#333" stroke-width="1" stroke-dasharray="6 6"/>
+<rect x="10" y="10" width="260" height="140" rx="70" fill="none" stroke="var(--acid)" stroke-width="2" opacity=".9" id="progressTrack" stroke-dasharray="0 1000" stroke-linecap="round"/>
+<circle r="8" fill="var(--acid)" stroke="#000" stroke-width="2" id="runnerDot" style="filter:drop-shadow(0 0 6px #CCFF00)"/>
+<circle r="4" fill="var(--pink)" id="ghostDot" opacity=".9"/>
+<text x="140" y="84" text-anchor="middle" font-family="Bebas Neue" font-size="22" fill="#fff" opacity=".9">400M</text>
+<text x="140" y="98" text-anchor="middle" font-size="8" letter-spacing=".15em" fill="#fff" opacity=".35">LONDON MARATHON TRACK</text>
+</svg>
+<div class="progress-bar"><i id="prog"></i></div>
+<div style="display:flex;justify-content:space-between;width:100%;font-size:10px;letter-spacing:.1em;opacity:.5"><span>START</span><span id="distLabel">0 / 400m</span><span>FINISH</span></div>
+<div class="lap-stats">
+<div class="stat"><label>Lap</label><b id="lapCount" class="bebas">0</b><small id="lapSub">press START</small></div>
+<div class="stat"><label>Split</label><b id="splitTime" class="bebas">00:00</b><small id="splitDelta" style="color:var(--acid)">— target 01:30</small></div>
+<div class="stat"><label>Behind / Ahead</label><b id="aheadBehind" class="bebas" style="color:var(--acid)">±0.0s</b><small id="aheadLabel">on pace</small></div>
+</div>
+</div>
+<div style="padding:0 14px 14px;display:flex;gap:8px">
+<button class="btn btn-go" id="startBtn">▶ START RUN</button>
+<button class="btn btn-lap" id="lapBtn" disabled>LAP +100M</button>
+<button class="btn btn-ghost" id="resetBtn">RESET</button>
+</div>
+</div>
+
+<div class="card">
+<div class="card-h"><span>♫ GENERATIVE BEAT ENGINE</span><span class="badge badge-pink" id="bpmBadge">120 BPM</span></div>
+<div style="padding:12px 14px 0" class="viz" id="viz"></div>
+<div class="beat-grid" id="grid"></div>
+<div class="controls">
+<div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TARGET BPM</span><input type="range" id="targetBpm" min="120" max="200" value="170"><b class="mono" id="targetBpmVal" style="min-width:42px;text-align:right">170</b></div>
+<div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TRACK PACE</span><input type="range" id="targetPace" min="60" max="240" value="90"><b class="mono" id="targetPaceVal" style="min-width:52px;text-align:right">1:30</b><span class="mono" style="font-size:10px;opacity:.5">/400m</span></div>
+<div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">INTENSITY</span><input type="range" id="intensity" min="0" max="100" value="65"><b class="mono" id="intensityVal" style="min-width:42px;text-align:right">65%</b></div>
+<label style="display:flex;gap:8px;align-items:center;font-size:12px"><input type="checkbox" id="adaptive" checked> <b>Adaptive</b> <span style="opacity:.6">— auto-shift BPM when you're off split</span></label>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:16px">
+<div class="card">
+<div class="card-h"><span>◉ CADENCE</span><span class="badge" style="background:#222;color:#fff;border:1px solid #333" id="cadBadge">TAP OR MOTION</span></div>
+<div style="padding:14px;display:grid;gap:10px">
+<div class="kpi">
+<div><label>Live Cadence</label><b id="liveBpm">— <small>BPM</small></b><div class="delta" id="liveDelta">tap to calibrate</div></div>
+<div><label>Target Cadence</label><b id="tgtBpm2">170 <small>BPM</small></b><div class="delta up" id="paceAdvice">LOCK IN 🔒</div></div>
+</div>
+<button class="tap" id="tapBtn">◆ TAP TO CADENCE — hit on each step</button>
+<div style="display:flex;gap:8px">
+<button class="btn btn-ghost" id="motionBtn" style="padding:10px;font-size:11px">ENABLE MOTION SENSOR</button>
+<button class="btn btn-ghost" id="metronomeBtn" style="padding:10px;font-size:11px">🔊 SOUND ON</button>
+</div>
+<div style="font-size:11px;opacity:.5;line-height:1.5">Tip for demo: put phone in pocket and run 20m — motion sensor auto-detects steps. Or tap with thumb. Beat shifts <b style="color:var(--acid)">faster + brighter</b> when behind target split.</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-h"><span>SPLITS & GHOST</span><span class="badge" style="background:var(--cyan);color:#000">SPLITCLASH</span></div>
+<div class="splits"><table><thead><tr><th>LAP</th><th>SPLIT</th><th>TARGET</th><th>Δ</th></tr></thead><tbody id="splitsBody"><tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr></tbody></table></div>
+<div style="padding:0 14px 14px;display:flex;gap:8px">
+<button class="btn btn-ghost" id="ghostBtn" style="padding:10px;font-size:11px">👻 GHOST: OFF</button>
+<button class="btn btn-ghost" id="shareBtn" style="padding:10px;font-size:11px">SHARE SPLIT</button>
+</div>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#1a1a00,#1a0011);border-color:#333">
+<div style="padding:14px">
+<div style="font-size:10px;letter-spacing:.12em;opacity:.6">PITCH DECK IN ONE LINE</div>
+<div class="bebas" style="font-size:20px;line-height:1;margin-top:4px">SYNC SOUND TO STRIDE. BEAT THE TRACK.</div>
+<div style="font-size:12px;opacity:.7;margin-top:6px;line-height:1.5">PaceBeat generates a live metronome that <b style="color:var(--acid)">adapts to your cadence and 400m split</b>. DJ vibe → trumpet stabs when you surge. Miss your split and the beat pushes you. Nail it and it locks.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="footer">
+<span class="chip">✓ No install — runs in browser</span>
+<span class="chip">✓ Works with headphones / speaker</span>
+<span class="chip">✓ Motion + tap cadence</span>
+<span class="chip">✓ Healf-ready: HRV → sauna protocol (next)</span>
+<span class="chip" style="border-color:var(--acid);color:var(--acid)">LIVE DEMO: RUN 100M NOW</span>
+</div>
+
+<script>
+const $=s=>document.querySelector(s)
+let audioCtx, nextNote=0, timerID, current16=0
+let isPlaying=false, isRunning=false
+let targetBPM=170, intensity=65, adaptive=true
+let liveBPM=null, lapStart=0, runStart=0, laps=[]
+let dist=0, lapInterval=null
+const targetPaceEl=$('#targetPace'), targetBpmEl=$('#targetBpm')
+function fmt(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(Math.floor((sec%1)*10))}
+function paceFmt(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0')}
+function getTargetSec(){ return parseInt(targetPaceEl.value,10)}
+$('#targetBpm').addEventListener('input',e=>{targetBPM=parseInt(e.target.value,10);$('#targetBpmVal').textContent=targetBPM;$('#tgtBpm2').innerHTML=targetBPM+' <small>BPM</small>';$('#bpmBadge').textContent=targetBPM+' BPM'})
+$('#targetPace').addEventListener('input',e=>{const v=parseInt(e.target.value,10);$('#targetPaceVal').textContent=paceFmt(v);$('#splitDelta').textContent='— target '+paceFmt(v)})
+$('#intensity').addEventListener('input',e=>{intensity=parseInt(e.target.value,10);$('#intensityVal').textContent=intensity+'%'})
+$('#adaptive').addEventListener('change',e=>adaptive=e.target.checked)
+const grid=$('#grid'); for(let i=0;i<16;i++){ const el=document.createElement('i'); if(i%4===0) el.style.background='#333'; grid.appendChild(el)}
+const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i'); b.style.height=(8+Math.random()*28)+'px'; b.style.opacity=.6+Math.random()*.4; viz.appendChild(b)}
+function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume()}
+function playTone(freq, dur, gain, type='sine', t){
+ const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+ o.type=type; o.frequency.value=freq; g.gain.value=gain;
+ o.connect(g).connect(audioCtx.destination);
+ g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+ o.start(t); o.stop(t+dur+.02)
+}
+function playKick(t, vel){
+ const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+ o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(40,t+.09);
+ g.gain.setValueAtTime(vel,t); g.gain.exponentialRampToValueAtTime(0.001,t+.28);
+ o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t+.3)
+}
+function schedule(){
+ const beatDur=60/targetBPM;
+ while(nextNote < audioCtx.currentTime + .12){
+  const step=current16%16
+  const isKick = step%4===0
+  const isHat = step%2===1 || (intensity>70 && Math.random()>.6)
+  const vel = isKick? .9 : .32
+  if(isKick) playKick(nextNote, vel*(.6+intensity/180))
+  if(isHat) playTone(9000,.04,.12*(intensity/100),'square',nextNote)
+  if(step===0) playTone(220,.18,.18,'sine',nextNote)
+  if(adaptive && isRunning){
+    const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
+    const behind=elapsed - tgt*prog
+  }
+  document.querySelectorAll('#grid i').forEach((el,i)=>{ el.classList.toggle('active', i===step); el.classList.toggle('on', isKick? i%4===0 : (i%4===2 && intensity>35)) })
+  document.querySelectorAll('#viz i').forEach((el,i)=>{
+    const h= 6 + Math.abs(Math.sin((step+i)*.6))* (18+intensity/4) + (isKick&&i%3===0?18:0)
+    el.style.height=h+'px'; el.style.background = isKick? 'var(--acid)' : (step%4===0?'#fff':'var(--cyan)')
+  })
+  nextNote += beatDur/4
+  current16 = (current16+1)%16
+ }
+}
+function startAudio(){
+ ensureAudio(); if(isPlaying) return; isPlaying=true
+ nextNote=audioCtx.currentTime+.05; timerID=setInterval(schedule,25)
+ $('#metronomeBtn').textContent='🔊 SOUND ON • PLAYING'
+ $('#bpmBadge').textContent=targetBPM+' BPM • PLAYING'
+ $('#modeBadge').textContent='BEAT LIVE'
+ $('#modeBadge').className='badge badge-acid'
+}
+function stopAudio(){ isPlaying=false; clearInterval(timerID); $('#metronomeBtn').textContent='🔊 SOUND ON'}
+let effectiveBPM=targetBPM
+function updateAdaptive(){
+ if(!adaptive || !isRunning || liveBPM==null) { effectiveBPM=targetBPM; return}
+ const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec()
+ const expectedProgress= elapsed/tgt
+ const liveDelta = liveBPM - targetBPM
+ let push=0
+ if(expectedProgress>0.15){
+   const timeBehind = elapsed - tgt*.25 - (dist%400)/400*tgt
+ }
+ const behindTime = elapsed - (dist%400)/400*tgt - (tgt*( (Date.now()-runStart)/1000 / tgt - Math.floor((Date.now()-runStart)/1000/tgt)) )
+ const splitBehind = elapsed - tgt*(elapsed/tgt)
+ const behindSec = elapsed - tgt*(Math.min(elapsed/tgt,1))
+ const cadencePush = liveDelta < -4 ? 6 : liveDelta>4 ? -4 : 0
+ const splitPush = behindSec > 1 ? 8 : behindSec < -1 ? -6 : 0
+ push = cadencePush + splitPush
+ effectiveBPM = Math.max(120,Math.min(205, targetBPM + push))
+ if(Math.abs(effectiveBPM-targetBPM)>2){ $('#bpmBadge').textContent=Math.round(effectiveBPM)+' BPM • PUSHING'; $('#bpmBadge').style.background='var(--pink)' } else { $('#bpmBadge').textContent=targetBPM+' BPM • LOCKED'; $('#bpmBadge').style.background='' }
+ targetBPM = parseInt($('#targetBpm').value,10)
+}
+function tick(){
+ if(!isRunning) return
+ const now=Date.now(), elapsed=(now-lapStart)/1000, total=(now-runStart)/1000
+ const tgt=getTargetSec(), prog=Math.min(elapsed/tgt,1)
+ $('#splitTime').textContent=fmt(elapsed)
+ $('#prog').style.width=(prog*100)+'%'
+ const perim=2*(260+140)+2*Math.PI*70-0, dash=perim*prog
+ $('#progressTrack').setAttribute('stroke-dasharray', dash+' '+(perim-dash))
+ const angle = prog*2*Math.PI - Math.PI/2
+ const rx=130, ry=70, cx=140, cy=80
+ let x,y
+ if(prog<0.21){ x=10+70+ prog/0.21*130; y=10 }
+ else if(prog<0.5){ const p=(prog-0.21)/0.29; const a=p*Math.PI; x=10+200+Math.cos(a)*70; y=10+70+Math.sin(a)*70 }
+ else if(prog<0.71){ x=10+200 - (prog-0.5)/0.21*130; y=150 }
+ else { const p=(prog-0.71)/0.29; const a=Math.PI + p*Math.PI; x=10+70+Math.cos(a)*70; y=10+70+Math.sin(a)*70 }
+ $('#runnerDot').setAttribute('cx',x); $('#runnerDot').setAttribute('cy',y)
+ const ghostProg = (total % tgt)/tgt
+ let gx,gy
+ if(ghostProg<0.21){ gx=10+70+ ghostProg/0.21*130; gy=10 }
+ else if(ghostProg<0.5){ const p=(ghostProg-0.21)/0.29; const a=p*Math.PI; gx=10+200+Math.cos(a)*70; gy=10+70+Math.sin(a)*70 }
+ else if(ghostProg<0.71){ gx=10+200 - (ghostProg-0.5)/0.21*130; gy=150 }
+ else { const p=(ghostProg-0.71)/0.29; const a=Math.PI + p*Math.PI; gx=10+70+Math.cos(a)*70; gy=10+70+Math.sin(a)*70 }
+ const g=$('#ghostDot'); if(ghostOn){ g.setAttribute('cx',gx); g.setAttribute('cy',gy); g.style.display='block'} else g.style.display='none'
+ dist = laps.length*400 + prog*400
+ $('#distLabel').textContent=Math.round(dist)+' / '+( (laps.length+1)*400 )+'m'
+ const behind = elapsed - tgt*prog* (prog<1?1:1)
+ const deltaSec = elapsed - tgt*prog
+ const aheadBehindEl=$('#aheadBehind')
+ if(Math.abs(deltaSec)<0.4){ aheadBehindEl.textContent='±0.0s'; aheadBehindEl.style.color='var(--acid)'; $('#aheadLabel').textContent='on pace ✓'; $('#aheadLabel').style.color='var(--acid)'}
+ else if(deltaSec>0){ aheadBehindEl.textContent='+'+deltaSec.toFixed(1)+'s'; aheadBehindEl.style.color='var(--pink)'; $('#aheadLabel').textContent='behind — push!'; $('#aheadLabel').style.color='var(--pink)'}
+ else { aheadBehindEl.textContent=deltaSec.toFixed(1)+'s'; aheadBehindEl.style.color='var(--cyan)'; $('#aheadLabel').textContent='ahead — hold!'; $('#aheadLabel').style.color='var(--cyan)'}
+ updateAdaptive()
+ if(isPlaying) targetBPM = Math.round(effectiveBPM)
+}
+setInterval(tick, 60)
+let ghostOn=false
+$('#ghostBtn').onclick=()=>{ ghostOn=!ghostOn; $('#ghostBtn').textContent=ghostOn?'👻 GHOST: ON':'👻 GHOST: OFF'; $('#ghostBtn').style.background=ghostOn?'var(--cyan)':''; $('#ghostBtn').style.color=ghostOn?'#000':'' }
+let taps=[]
+$('#tapBtn').addEventListener('click',()=>{
+ const now=Date.now(); taps.push(now); taps=taps.filter(t=>now-t<3000); if(taps.length<2) return
+ const intervals=[]; for(let i=1;i<taps.length;i++) intervals.push(taps[i]-taps[i-1])
+ const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length
+ const bpm=Math.round(60000/avg)
+ if(bpm>=90 && bpm<=240){ liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'; const d=bpm - parseInt($('#targetBpm').value,10); const el=$('#liveDelta'); if(Math.abs(d)<=3){el.textContent='locked ✓'; el.className='delta up'} else if(d<0){el.textContent=(d)+' BPM — speed up!'; el.className='delta down'} else {el.textContent='+'+d+' BPM — ease'; el.className='delta up'}; if(adaptive) { targetBPM=bpm; $('#targetBpm').value=bpm; $('#targetBpmVal').textContent=bpm; $('#tgtBpm2').innerHTML=bpm+' <small>BPM</small>'} ensureAudio(); if(!isPlaying) startAudio(); if(navigator.vibrate) navigator.vibrate(20); playTone(800,.08,.2,'square',audioCtx.currentTime) }
+})
+let motionActive=false
+$('#motionBtn').onclick=async()=>{
+ if(motionActive) return
+ try{
+  if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){ const p=await DeviceMotionEvent.requestPermission(); if(p!=='granted') throw new Error('denied')}
+  let lastPeak=0, lastVal=0
+  window.addEventListener('devicemotion',e=>{
+    const a=e.accelerationIncludingGravity; if(!a) return
+    const mag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2)
+    const now=Date.now()
+    if(mag>13.2 && mag>lastVal && now-lastPeak>250){ lastPeak=now; taps.push(now); taps=taps.filter(t=>now-t<3000); if(taps.length>=2){ const iv=[]; for(let i=1;i<taps.length;i++) iv.push(taps[i]-taps[i-1]); const avg=iv.reduce((a,b)=>a+b,0)/iv.length; const bpm=Math.round(60000/avg); if(bpm>=120&&bpm<=220){ liveBPM=bpm; $('#liveBpm').innerHTML=bpm+' <small>BPM</small>'; $('#cadBadge').textContent='MOTION • '+bpm+' BPM'; $('#cadBadge').style.background='var(--acid)'; $('#cadBadge').style.color='#000'} } }
+    lastVal=mag
+  })
+  motionActive=true; $('#motionBtn').textContent='MOTION • LISTENING'; $('#motionBtn').style.background='var(--acid)'; $('#motionBtn').style.color='#000'; $('#cadBadge').textContent='MOTION ON'
+ }catch(err){ alert('Motion sensor needs HTTPS + permission. Use TAP instead.'); }
+}
+$('#metronomeBtn').onclick=()=>{ ensureAudio(); if(!isPlaying) startAudio(); else { stopAudio(); }}
+$('#startBtn').onclick=()=>{
+ ensureAudio(); startAudio()
+ if(!isRunning){ isRunning=true; runStart=Date.now(); lapStart=runStart; $('#startBtn').textContent='⏸ PAUSE'; $('#lapBtn').disabled=false; $('#modeBadge').textContent='RUNNING'; if(navigator.vibrate) navigator.vibrate(40); lapInterval=setInterval(tick,50) } else { isRunning=false; $('#startBtn').textContent='▶ RESUME'; $('#modeBadge').textContent='PAUSED'; clearInterval(lapInterval)}
+}
+$('#lapBtn').onclick=()=>{
+ if(!isRunning) return
+ const elapsed=(Date.now()-lapStart)/1000, tgt=getTargetSec(), delta=elapsed-tgt
+ laps.push({split:elapsed, delta})
+ lapStart=Date.now(); $('#lapCount').textContent=laps.length; $('#lapSub').textContent=laps.length+' × 400m'
+ const tbody=$('#splitsBody'); if(laps.length===1) tbody.innerHTML=''
+ const tr=document.createElement('tr')
+ tr.innerHTML='<td class="bebas">'+laps.length+'</td><td>'+fmt(elapsed)+'</td><td>'+paceFmt(tgt)+'</td><td><span class="pill '+(Math.abs(delta)<1.2?'pill-good':'pill-bad')+'">'+(delta>0?'+':'' )+delta.toFixed(1)+'s</span></td>'
+ tbody.prepend(tr)
+ if(navigator.vibrate) navigator.vibrate([30,40,30])
+ ensureAudio(); playTone(delta<0?1200:600,.22,.28,'square',audioCtx.currentTime); setTimeout(()=>playTone(delta<0?1600:400,.18,.18,'sine',audioCtx.currentTime+.14),0)
+ if(laps.length>=1 && window.speechSynthesis){ const u=new SpeechSynthesisUtterance(delta<0? 'Lap '+laps.length+', ahead ' + Math.abs(delta).toFixed(1) : 'Lap '+laps.length+', behind ' + delta.toFixed(1)); u.rate=1.1; speechSynthesis.speak(u)}
+}
+$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; clearInterval(lapInterval); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="4" style="opacity:.4;padding:14px;text-align:center">No laps yet — hit START then LAP each 100m/400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000') }
+$('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\\n') || 'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits', text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)}) }
+if(location.search.includes('autostart')) setTimeout(()=>$('#startBtn').click(),600)
+</script>
+</body>
+</html>
