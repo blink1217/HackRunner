@@ -319,12 +319,155 @@ details.m-sheet .m-body{ padding:0 12px 12px }
   #mobileBar{ display:none !important }
 }
 
-/* reduce motion respect */
+/* ===== FLUID RESPONSIVE — THE HOLY GRAIL ===== */
+:root{
+  /* fluid typography: scales smoothly from mobile to desktop */
+  --fs-xs: clamp(0.65rem, 0.6rem + 0.25vw, 0.75rem);
+  --fs-sm: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
+  --fs-base: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
+  --fs-lg: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  --fs-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+  --fs-2xl: clamp(1.5rem, 1.3rem + 1vw, 2.5rem);
+  --fs-3xl: clamp(1.75rem, 1.5rem + 1.5vw, 3rem);
+  
+  /* fluid spacing */
+  --sp-xs: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
+  --sp-sm: clamp(0.5rem, 0.4rem + 0.5vw, 1rem);
+  --sp-md: clamp(0.75rem, 0.6rem + 0.75vw, 1.5rem);
+  --sp-lg: clamp(1rem, 0.8rem + 1vw, 2rem);
+  --sp-xl: clamp(1.5rem, 1.2rem + 1.5vw, 3rem);
+  
+  /* fluid container widths */
+  --container-sm: min(100% - 2rem, 640px);
+  --container-md: min(100% - 2rem, 960px);
+  --container-lg: min(100% - 2rem, 1280px);
+}
+
+/* container queries: cards respond to their own size, not viewport */
+.card{ container-type: inline-size; container-name: card }
+
+/* fluid base typography */
+body{ font-size: var(--fs-base) }
+.card-h{ font-size: var(--fs-xs) }
+.stat b{ font-size: var(--fs-3xl) }
+.stat label{ font-size: var(--fs-xs) }
+.kpi b{ font-size: var(--fs-xl) }
+.btn{ font-size: var(--fs-base) }
+.pill{ font-size: var(--fs-sm) }
+
+/* fluid spacing */
+.wrap{ padding: var(--sp-md); gap: var(--sp-md) }
+.card{ margin-bottom: var(--sp-md) }
+.controls{ padding: var(--sp-md); gap: var(--sp-sm) }
+.slider-row{ padding: var(--sp-sm) }
+
+/* fluid grid: adapts to available space */
+.wrap{ 
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  gap: var(--sp-md);
+}
+
+/* container query: card internal layout responds to card width */
+@container card (max-width: 400px){
+  .kpi{ grid-template-columns: 1fr }
+  .stem-row{ flex-wrap: wrap }
+  .mix-row{ flex-direction: column }
+}
+
+@container card (min-width: 401px) and (max-width: 600px){
+  .kpi{ grid-template-columns: 1fr 1fr }
+}
+
+@container card (min-width: 601px){
+  .kpi{ grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) }
+}
+
+/* aspect ratio preservation for key elements */
+.track-svg{ aspect-ratio: 280/160; width: 100%; max-width: 400px; height: auto }
+.rec-ring{ aspect-ratio: 1; width: clamp(60px, 8vw, 80px) }
+.breath-ring{ aspect-ratio: 1; width: clamp(50px, 7vw, 70px) }
+
+/* fluid HUD: scales with viewport */
+#hud .hcell b{ font-size: clamp(2rem, 8vw, 4rem) }
+#hud .hcell small{ font-size: var(--fs-xs) }
+#hud .hcell em{ font-size: var(--fs-sm) }
+
+/* smooth breakpoint transitions */
+.card, .btn, .pill, .stat{ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) }
+
+/* orientation-aware layouts */
+@media (orientation: landscape) and (max-height: 500px){
+  .wrap{ grid-template-columns: 1fr }
+  .track-svg{ max-width: 300px }
+  #hud .hrow{ flex-direction: row }
+}
+
+/* high-DPI optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi){
+  .track-svg{ image-rendering: -webkit-optimize-contrast }
+}
+
+/* print styles */
+@media print{
+  .card{ break-inside: avoid; page-break-inside: avoid }
+  #mobileBar, #hud{ display: none }
+  body{ background: #fff; color: #000 }
+}
+
+/* hover-capable devices only */
+@media (hover: hover){
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3) }
+  .pill:hover{ transform: scale(1.05) }
+}
+
+/* touch devices: larger tap targets */
+@media (pointer: coarse){
+  .btn{ min-height: 44px; min-width: 44px }
+  .pill{ min-height: 44px; padding: var(--sp-sm) var(--sp-md) }
+  .tap{ min-height: 64px }
+}
+
+/* prefers color scheme */
+@media (prefers-color-scheme: dark){
+  :root{ --bg: #0A0A0A; --text: #fff }
+}
+
+@media (prefers-color-scheme: light){
+  :root{ --bg: #fff; --text: #0A0A0A }
+  body{ background: var(--bg); color: var(--text) }
+}
+
+/* reduced data mode */
+@media (prefers-reduced-data: reduce){
+  .viz, .wave-mini{ display: none }
+}
+
+/* ultra-wide monitors */
+@media (min-width: 2000px){
+  .wrap{ max-width: 1600px; margin: 0 auto }
+  .card{ padding: var(--sp-lg) }
+}
+
+/* fold phones (Galaxy Fold, etc.) */
+@media (min-width: 280px) and (max-width: 653px) and (orientation: portrait){
+  .wrap{ grid-template-columns: 1fr }
+}
+
+/* reduced motion respect */
 @media(prefers-reduced-motion:reduce){
   .dot, .breath-ring, .wave-mini.playing i{ animation:none !important }
-  .v3-stem .meter i{ transition:none }
+  .v3-stem .meter i, .card, .btn, .pill, .stat{ transition:none !important }
+  .card, .btn, .pill{ transition:none !important }
 }
-.card.collapsed > *:not(.card-h){ display:none }
+
+/* tablet landscape */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape){
+  .wrap{ grid-template-columns: repeat(2, 1fr) }
+}
+/* container-query compact mode */
+.card-compact .kpi{ grid-template-columns:1fr }
+.card-compact .stem-row{ flex-wrap:wrap }
 </style>
 </head>
 <body>
@@ -1393,6 +1536,15 @@ function drawVizFrame(){
 }
 requestAnimationFrame(masterLoop)
 selectTrack('fhouse')
+// ResizeObserver: cards respond to their actual rendered width
+if('ResizeObserver' in window){
+  const ro=new ResizeObserver(entries=>{
+    for(const entry of entries){
+      entry.target.classList.toggle('card-compact', entry.contentRect.width<300)
+    }
+  })
+  document.querySelectorAll('.card').forEach(c=>ro.observe(c))
+}
 if(location.search.includes('autostart')) setTimeout(()=>$('#startBtn').click(),600)
 if('serviceWorker' in navigator && location.protocol==='https:'){ addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}) }) }
 // ===== MOBILE BAR WIRING =====
