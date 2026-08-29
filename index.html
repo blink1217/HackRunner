@@ -74,18 +74,27 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .viz i{flex:1;background:var(--acid);border-radius:2px;min-height:4px;transition:height .05s}
 .footer{max-width:1100px;margin:0 auto;padding:10px 16px 20px;display:flex;gap:8px;flex-wrap:wrap}
 .chip{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid #2a2a2a;padding:6px 10px;border-radius:999px;opacity:.7}
-.tracks{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px}
-@media(max-width:480px){.tracks{grid-template-columns:1fr}}
-.track-btn{background:#0f0f0f;border:1px solid #2a2a2a;border-radius:12px;padding:12px;text-align:left;cursor:pointer;transition:.12s;color:#fff;font-family:'Space Grotesk',sans-serif}
-.track-btn:hover{border-color:#444;background:#151515}
-.track-btn.active{border-color:var(--acid);background:linear-gradient(135deg,#1a2000,#101010);box-shadow:0 0 12px rgba(204,255,0,.15)}
-.track-btn .tname{font-family:'Bebas Neue';font-size:17px;letter-spacing:.03em;display:flex;justify-content:space-between;align-items:center}
-.track-btn .tname .tnum{font-size:10px;opacity:.4;font-family:'JetBrains Mono'}
-.track-btn .tmeta{font-size:10px;opacity:.55;margin-top:3px;letter-spacing:.05em}
-.track-btn .tbar{height:3px;border-radius:2px;margin-top:8px;background:#222;overflow:hidden}
-.track-btn .tbar i{display:block;height:100%;width:0%;background:var(--acid);transition:width .2s}
-.track-btn.active .tbar i{width:100%}
-.track-btn.playing .tname b{color:var(--acid)}
+/* unified genre pills */
+.pill-row{display:flex;gap:8px;padding:12px 12px 4px;overflow-x:auto;scrollbar-width:none}
+.pill-row::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;padding:10px 16px;border-radius:999px;border:1px solid #333;background:#0f0f0f;color:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap;transition:.12s}
+.pill.active{border-color:var(--acid);color:var(--acid);background:linear-gradient(135deg,#1a2000,#0f0f0f);box-shadow:0 0 12px rgba(204,255,0,.15)}
+.pill:hover{border-color:#555}
+.sel-panel{margin:8px 12px 12px;background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:12px;display:grid;gap:10px}
+.sel-name{font-size:20px;line-height:1;letter-spacing:.03em}
+.sel-meta{font-size:10px;opacity:.6;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.sel-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sel-actions .pv-btn{padding:10px 14px;border-radius:10px;border:1px solid var(--cyan);background:#0a1a1a;color:var(--cyan);font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+.sel-actions .pv-btn.playing{background:var(--cyan);color:#000}
+.lock-toggle{display:flex;gap:6px;align-items:center;font-size:11px;opacity:.85;cursor:pointer}
+.sel-energy{font-size:11px;opacity:.75}
+.sel-energy b{color:var(--acid)}
+.wave-mini{display:flex;gap:2px;align-items:center;height:26px}
+.wave-mini i{flex:1;background:#2a2a2a;border-radius:1px;height:30%;transition:background .3s}
+.wave-mini.playing i{background:var(--cyan);animation:wv 0.9s infinite ease-in-out}
+@keyframes wv{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+.samples{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+@media(max-width:480px){.samples{grid-template-columns:1fr}}
 .upload-row{display:flex;gap:8px;padding:0 12px 12px;align-items:center}
 .upload-row button{flex:1;padding:12px;border-radius:12px;border:2px dashed #444;background:#0f0f0f;color:#fff;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-size:12px}
 .upload-row button:hover{border-color:var(--acid)}
@@ -103,19 +112,8 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .mix-row{display:flex;gap:6px;align-items:center}
 .mix-row button{flex:1;padding:9px;border-radius:8px;border:1px solid #333;background:#0f0f0f;color:#fff;font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-family:'Space Grotesk',sans-serif}
 .mix-row button.active{border-color:var(--pink);color:#fff;background:linear-gradient(135deg,#2a0a1a,#0f0f0f);box-shadow:0 0 10px rgba(255,46,147,.25)}
-.samples{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
-@media(max-width:480px){.samples{grid-template-columns:1fr}}
-.sample-btn{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;color:#fff;font-family:'Space Grotesk',sans-serif;transition:.12s}
-.sample-btn:hover{border-color:var(--cyan)}
-.sample-btn b{font-family:'Bebas Neue';font-size:15px;letter-spacing:.03em;display:block}
-.sample-btn span{font-size:10px;opacity:.55}
-.sample-btn .playic{width:28px;height:28px;border-radius:50%;background:var(--cyan);color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
 .ytbox{position:relative;padding-top:56.25%;margin:0 12px 12px;border-radius:12px;overflow:hidden;background:#000}
 .ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.sample-links{display:flex;gap:8px;padding:0 12px 12px;flex-wrap:wrap}
-.sample-links a{font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1px solid #2a2a2a;padding:5px 10px;border-radius:999px;color:#fff;opacity:.7;text-decoration:none}
-.sample-links a:hover{opacity:1;border-color:var(--acid)}
-.sample-links a:active{transform:scale(.98)}
 #hud{position:fixed;inset:0;z-index:50;background:#000;display:none;flex-direction:column}
 #hud.on{display:flex}
 #hud .hrow{display:flex;flex:1}
@@ -209,34 +207,29 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 
 <div style="display:flex;flex-direction:column;gap:16px">
 <div class="card">
-<div class="card-h"><span>◈ Track Selector</span><span class="badge badge-cyan" id="trackBadge">TECH HOUSE — F</span></div>
-<div class="tracks" id="tracks">
-<button class="track-btn active" data-track="fhouse"><div class="tname"><b>TECH HOUSE — F</b><span class="tnum">01</span></div><div class="tmeta">127 BPM · F MAJOR · 4-FLOOR · MATCHES YOUR TRACK</div><div class="tbar"><i></i></div></button>
-<button class="track-btn" data-track="acid"><div class="tname"><b>ACID 303</b><span class="tnum">02</span></div><div class="tmeta">129 BPM · F MINOR · RESONANT SQUELCH</div><div class="tbar"><i></i></div></button>
-<button class="track-btn" data-track="deep"><div class="tname"><b>MELODIC DEEP</b><span class="tnum">03</span></div><div class="tmeta">124 BPM · A MINOR · PADS + PLUCK ARP</div><div class="tbar"><i></i></div></button>
-<button class="track-btn" data-track="afro"><div class="tname"><b>AFRO HOUSE</b><span class="tnum">04</span></div><div class="tmeta">122 BPM · D MINOR · CONGA + HORN CALLS</div><div class="tbar"><i></i></div></button>
-<button class="track-btn" data-track="upload"><div class="tname"><b>YOUR TRACK</b><span class="tnum">05</span></div><div class="tmeta">UPLOAD AUDIO → AUTO BPM + STYLE</div><div class="tbar"><i></i></div></button>
+<div class="card-h"><span>◈ Sound &amp; Genre Selection</span><span class="badge badge-cyan" id="trackBadge">TECH HOUSE — F</span></div>
+<div class="pill-row" id="pillRow">
+<button class="pill active" data-track="fhouse">🔥 Tech House</button>
+<button class="pill" data-track="afro">🌴 Afro House</button>
+<button class="pill" data-track="deep">🌊 Deep House</button>
+<button class="pill" data-track="acid">⚡ Acid Techno</button>
+<button class="pill" data-track="upload">➕ Upload</button>
 </div>
-<div class="upload-row"><button id="uploadBtn">⬆ UPLOAD AUDIO</button><span class="ufile" id="ufile">mp3 / wav / m4a / ogg — analyzed in-browser</span></div>
-<input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac" hidden>
-<div class="upload-row"><label style="display:flex;gap:8px;align-items:center;font-size:11px;opacity:.8"><input type="checkbox" id="syncBpm" checked> <b>SYNC TO BPM</b> <span style="opacity:.6">— OLA-stretch (low artefacts) + WASM path when available</span></label></div>
-<div class="analyzer" id="analyzer" style="display:none"><span class="an-chip">BPM <b id="anBpm">—</b></span><span class="an-chip">KEY <b id="anKey">—</b></span><span class="an-chip">STYLE <b id="anStyle">—</b></span><span class="an-chip">STATUS <b id="anStatus">decoding…</b></span></div>
+<div class="sel-panel">
+<div><div class="sel-name bebas" id="selName">TECH HOUSE — F</div><div class="sel-meta" id="selMeta">127 BPM · F MAJOR · 4-ON-THE-FLOOR · STEM LOCKED</div></div>
+<div class="wave-mini" id="waveMini"></div>
+<div class="sel-actions">
+<button class="pv-btn" id="previewBtn">▶ Preview Track</button>
+<label class="lock-toggle"><input type="checkbox" id="lockStride" checked> 🔒 Lock to Stride</label>
 </div>
-
-<div class="card">
-<div class="card-h"><span>◉ Sample Tracks — Free / Royalty-free</span><span class="badge" style="background:var(--cyan);color:#000">PER GENRE</span></div>
-<div class="samples" id="samples">
-<button class="sample-btn" data-kind="audio" data-src="https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3"><div><b>TECH HOUSE</b><span>125 BPM · free preview</span></div><i class="playic">▶</i></button>
-<button class="sample-btn" data-kind="yt" data-src="V_C5ceJtXsc"><div><b>TECH HOUSE</b><span>127 BPM · drums loop</span></div><i class="playic">▶</i></button>
-<button class="sample-btn" data-kind="yt" data-src="C1EPUeAVHZw"><div><b>ACID TECHNO</b><span>130 BPM · raw &amp; untamed</span></div><i class="playic">▶</i></button>
-<button class="sample-btn" data-kind="yt" data-src="4Ty5RJuZbd0"><div><b>DEEP HOUSE</b><span>124 BPM · backing loop</span></div><i class="playic">▶</i></button>
-<button class="sample-btn" data-kind="audio" data-src="https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3"><div><b>AFRO HOUSE</b><span>122 BPM · free preview</span></div><i class="playic">▶</i></button>
-<button class="sample-btn" data-kind="yt" data-src="zbXdR3RgiV0"><div><b>TECHNO</b><span>130 BPM · royalty-free</span></div><i class="playic">▶</i></button>
+<div class="sel-energy">🎚 Dynamic Energy: <b id="energyLabel">HIGH</b> · <span id="stemLockNote">stems follow your pace</span></div>
 </div>
 <div id="ytbox" class="ytbox" style="display:none"></div>
 <div id="audiobox" style="display:none;padding:0 12px 12px"><audio controls style="width:100%"></audio></div>
-<div class="sample-links"><a href="https://pixabay.com/music/search/tech%20house/" target="_blank">MORE TECH HOUSE</a><a href="https://pixabay.com/music/search/afro%20house/" target="_blank">AFRO HOUSE</a><a href="https://pixabay.com/music/search/deep%20house/" target="_blank">DEEP HOUSE</a><a href="https://pixabay.com/music/search/130%20bpm%20techno/" target="_blank">TECHNO</a></div>
-<div style="padding:0 12px 12px;font-size:10px;opacity:.5">Want it on the track? Download → ⬆ UPLOAD AUDIO above and SYNC TO BPM stretches it to cadence.</div>
+<div class="upload-row" id="uploadRow" style="display:none"><button id="uploadBtn">⬆ UPLOAD AUDIO</button><span class="ufile" id="ufile">mp3 / wav / m4a / ogg — analyzed in-browser</span></div>
+<input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac" hidden>
+<div class="upload-row" id="syncRow" style="display:none"><label style="display:flex;gap:8px;align-items:center;font-size:11px;opacity:.8"><input type="checkbox" id="syncBpm" checked> <b>SYNC TO BPM</b> <span style="opacity:.6">— OLA-stretch (low artefacts) + WASM path when available</span></label></div>
+<div class="analyzer" id="analyzer" style="display:none"><span class="an-chip">BPM <b id="anBpm">—</b></span><span class="an-chip">KEY <b id="anKey">—</b></span><span class="an-chip">STYLE <b id="anStyle">—</b></span><span class="an-chip">STATUS <b id="anStatus">decoding…</b></span></div>
 </div>
 
 <div class="card">
@@ -577,19 +570,78 @@ function triggerLap(){
 $('#lapBtn').onclick=triggerLap
 $('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; gpsDistance=0; gpsLapBase=0; gpsSpeed=0; gpsLastPos=null; gpsRunningState='STATIONARY'; stopTrackLoop(); updateGpsUI(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — 100m / 200m / 400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
 $('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
-document.querySelectorAll('.track-btn').forEach(btn=>btn.onclick=()=>selectTrack(btn.dataset.track))
+const PREVIEWS={
+ fhouse:{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3',label:'free preview · 125 BPM'},
+ acid:{kind:'yt',src:'C1EPUeAVHZw',label:'raw & untamed · 130 BPM'},
+ deep:{kind:'yt',src:'4Ty5RJuZbd0',label:'backing loop · 124 BPM'},
+ afro:{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3',label:'free preview · 122 BPM'}
+}
+const waveMini=$('#waveMini'); for(let i=0;i<24;i++){ const b=document.createElement('i'); b.style.animationDelay=(i*0.04)+'s'; waveMini.appendChild(b)}
+let previewActive=false
+function stopPreview(){
+ previewActive=false
+ waveMini.classList.remove('playing')
+ $('#previewBtn').classList.remove('playing'); $('#previewBtn').textContent='▶ Preview Track'
+ const ab=$('#audiobox'); const a=ab.querySelector('audio'); if(a){ a.pause() }
+ $('#ytbox').style.display='none'; $('#ytbox').innerHTML=''
+}
+function updateSelPanel(){
+ const st=currentTrack==='upload'?UPLOAD:TRACKS[currentTrack]
+ if(!st) return
+ $('#selName').textContent=st.name
+ $('#selMeta').textContent=st.bpm+' BPM · '+(st.key||'—')+' · STEM LOCKED'
+ const pv=PREVIEWS[currentTrack]
+ const btn=$('#previewBtn')
+ if(currentTrack==='upload'){ btn.textContent=UPLOAD?'▶ Preview Synced':'⬆ Pick Audio File' }
+ else { btn.textContent='▶ Preview Track — '+pv.label }
+ $('#uploadRow').style.display=currentTrack==='upload'?'flex':'none'
+ $('#syncRow').style.display=currentTrack==='upload'?'flex':'none'
+ $('#stemLockNote').textContent= currentTrack==='upload'&&$('#syncBpm').checked? 'custom track stretched to stride' : currentTrack==='upload'? 'native speed' : 'stems follow your pace'
+}
+document.querySelectorAll('#pillRow .pill').forEach(btn=>btn.onclick=()=>{
+ if(btn.dataset.track==='upload'&&!UPLOAD){ $('#fileInput').click(); selectTrack('upload'); return }
+ selectTrack(btn.dataset.track)
+})
 function selectTrack(id){
  if(id==='upload'&&!UPLOAD) return
+ stopPreview()
  currentTrack=id
- document.querySelectorAll('.track-btn').forEach(b=>b.classList.toggle('active',b.dataset.track===id))
+ document.querySelectorAll('#pillRow .pill').forEach(b=>b.classList.toggle('active',b.dataset.track===id))
  const st=currentTrack==='upload'?UPLOAD:TRACKS[id]
  $('#trackBadge').textContent=st.name
  $('#bpmBadge').textContent=st.bpm+' BPM • '+(isPlaying?'PLAYING':'READY')
  $('#anStyle').textContent=st.name
+ updateSelPanel()
  if(adaptive||liveBPM==null){ setBPMUI(st.bpm); if(isPlaying&&delayNode) delayNode.delayTime.value=60/st.bpm/4*3}
  if(currentTrack==='upload'){ applyMix(); if($('#syncBpm').checked) scheduleRestretch(); if(isPlaying&&mixMode>0) startTrackLoop() }
  else { stopTrackLoop(); if(mixMode>0){ mixMode=0; applyMix() } }
 }
+$('#previewBtn').onclick=()=>{
+ if(currentTrack==='upload'){
+  if(!UPLOAD){ $('#fileInput').click(); return }
+  if(!previewActive){ ensureAudio(); startTrackLoop(); previewActive=true; waveMini.classList.add('playing'); $('#previewBtn').classList.add('playing'); $('#previewBtn').textContent='⏸ Stop Preview' }
+  else { stopPreview() }
+  return
+ }
+ const pv=PREVIEWS[currentTrack]; if(!pv) return
+ if(previewActive){ stopPreview(); return }
+ if(pv.kind==='yt'){
+  const yt=$('#ytbox'); yt.style.display='block'; $('#audiobox').style.display='none'
+  yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+pv.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
+ } else {
+  const ab=$('#audiobox'); ab.style.display='block'; $('#ytbox').style.display='none'
+  const a=ab.querySelector('audio'); a.src=pv.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
+  a.onended=stopPreview
+ }
+ previewActive=true; waveMini.classList.add('playing')
+ $('#previewBtn').classList.add('playing'); $('#previewBtn').textContent='⏸ Stop Preview'
+}
+setInterval(()=>{
+ const st=djEngine? djEngine.state : (pushAmount>1?'SURGE':pushAmount>0?'BEHIND_PACE':'ON_PACE')
+ const map={SURGE:'SURGE 🔥',BEHIND_PACE:'BUILDING ⚡',ON_PACE: intensity>=55?'HIGH':'FLOW'}
+ $('#energyLabel').textContent=map[st]||'FLOW'
+ $('#stemLockNote').textContent= currentTrack==='upload'&&$('#syncBpm').checked? 'custom track stretched to stride' : currentTrack==='upload'? 'native speed' : 'stems follow your pace'
+},600)
 function detectBPM(buffer){
  const data=buffer.getChannelData(0), sr=buffer.sampleRate
  const hop=512, win=1024, env=[]
@@ -851,16 +903,6 @@ setInterval(()=>{
  if(Date.now()-bleHrAt>8000 && bleHr!==null){ bleHr=null; $('#hrNote').textContent='lost' }
  if(Date.now()-bleCadAt>6000 && bleCad!==null){ bleCad=null; $('#cadSrc').textContent=chooseSourceTag(); $('#bleNote').textContent='lost' }
 },3000)
-document.querySelectorAll('.sample-btn').forEach(btn=>btn.onclick=()=>{
- const yt=$('#ytbox'), ab=$('#audiobox')
- if(btn.dataset.kind==='yt'){
-  yt.style.display='block'; ab.style.display='none'
-  yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+btn.dataset.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
- } else {
-  ab.style.display='block'; yt.style.display='none'
-  const a=ab.querySelector('audio'); a.src=btn.dataset.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
- }
-})
 function drawViz(){
  if(!analyser) { requestAnimationFrame(drawViz); return }
  const d=new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(d)
