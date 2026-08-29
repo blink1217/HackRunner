@@ -132,6 +132,13 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 .stem-row{display:flex;gap:6px;padding:0 12px 12px}
 .stem-row button{flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#0f0f0f;color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
 .stem-row button.on{border-color:var(--acid);background:#141a00;color:var(--acid)}
+.stem-pack{margin:0 12px 12px;background:#0f0f0f;border:1px solid #222;border-radius:12px;padding:10px 12px;display:grid;gap:8px}
+.sp-head{font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.sp-head b{color:var(--acid)}
+.sp-files{display:flex;flex-direction:column;gap:3px;font-size:11px;font-family:'JetBrains Mono'}
+.sp-files .spf{display:flex;gap:6px;align-items:center}
+.sp-files .spf .role{font-size:9px;padding:1px 6px;border-radius:10px;background:#141a00;color:var(--acid);border:1px solid rgba(204,255,0,.3);letter-spacing:.06em}
+.sp-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -182,7 +189,18 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">TRACK PACE</span><input type="range" id="targetPace" min="60" max="240" value="90"><b class="mono" id="targetPaceVal" style="min-width:52px;text-align:right">1:30</b><span class="mono" style="font-size:10px;opacity:.5">/400m</span></div>
 <div class="slider-row"><span class="mono" style="font-size:11px;min-width:92px">INTENSITY</span><input type="range" id="intensity" min="0" max="100" value="65"><b class="mono" id="intensityVal" style="min-width:42px;text-align:right">65%</b></div>
 <div class="mix-row" id="mixRow"><button data-mix="0" class="active">♫ SYNTH</button><button data-mix="1">SYNTH + TRACK</button><button data-mix="2">TRACK ONLY</button></div>
-<div class="stem-row" id="stemRow"><button data-stem="bass" class="on">BASS</button><button data-stem="perc" class="on">PERC</button><button data-stem="pad" class="on">PAD</button><button data-stem="horn" class="on">HORN</button></div>
+<div class="stem-row" id="stemRow"><button data-stem="bass" class="on">BASS</button><button data-stem="perc" class="on">PERC</button><button data-stem="pad" class="on">PAD</button><button data-stem="horn" class="on">HORN</button><button data-stem="vocal" class="on">VOCAL</button></div>
+<div class="stem-pack" id="stemPack">
+<div class="sp-head"><b>◈ STEM PACK LOADER</b><span style="opacity:.6">— Envato "Includes Stems" packs: download stems → load here</span></div>
+<div class="sp-files" id="spFiles"><span style="opacity:.4;font-size:11px">No stems loaded. Load drums.wav / bass.wav / vocals.wav / melody.wav together.</span></div>
+<div class="sp-actions">
+<button id="spLoadBtn" class="pv-btn" style="border-color:var(--acid);color:var(--acid);background:#141a00">⬆ LOAD STEM FILES</button>
+<button id="spPlayBtn" class="pv-btn" disabled>▶ Play Stems</button>
+<label class="lock-toggle" style="font-size:10px"><input type="checkbox" id="spSync" checked> SYNC <input type="number" id="spBpm" value="128" min="60" max="200" style="width:52px;background:#0f0f0f;border:1px solid #333;border-radius:6px;color:#fff;padding:3px 6px;font-family:JetBrains Mono"> BPM</label>
+<span id="spStatus" style="font-size:10px;opacity:.6"></span>
+</div>
+<input type="file" id="spInput" multiple accept="audio/*,.wav,.mp3,.m4a,.ogg,.flac" hidden>
+</div>
 <div style="display:flex;gap:8px;padding:0 12px 12px"><button class="btn btn-ghost" id="hudBtn" style="padding:10px;font-size:11px;flex:1">HUD — HIGH-CONTRAST</button><button class="btn btn-ghost" id="voiceBtn" style="padding:10px;font-size:9px;flex:1">🔊 VOICE CUES ON</button><button class="btn btn-ghost" id="hatBtn" style="padding:10px;font-size:9px;flex:1">HAPTIC ON</button></div>
 <label style="display:flex;gap:8px;align-items:center;font-size:12px"><input type="checkbox" id="adaptive" checked> <b>Adaptive</b> <span style="opacity:.6">— auto-shift BPM + layers when you're off split</span></label>
 </div>
@@ -222,6 +240,7 @@ header{border-bottom:1px solid #222;padding:14px 16px;display:flex;justify-conte
 <div class="sel-actions"><label class="lock-toggle"><input type="checkbox" id="lockStride" checked> 🔒 Lock to Stride</label></div>
 </div>
 <div class="sel-energy">🎚 Dynamic Energy: <b id="energyLabel">HIGH</b> · <span id="stemLockNote">stems follow your pace</span></div>
+<div class="sel-energy"><span id="cacheStatus" class="kal">🔥 popular picks — cached after first play</span></div>
 </div>
 <div id="ytbox" class="ytbox" style="display:none"></div>
 <div id="audiobox" style="display:none;padding:0 12px 12px"><audio controls style="width:100%"></audio></div>
@@ -289,7 +308,7 @@ let audioCtx, master, reverb, delay, analyser, noiseBuf
 let nextNote=0, timerID, current16=0, stepIndex=0
 let isPlaying=false, isRunning=false
 let targetBPM=127, effectiveBPM=127, intensity=65, adaptive=true
-const prefs={ voice:true, haptic:true, stems:{bass:true,perc:true,pad:true,horn:true} }
+const prefs={ voice:true, haptic:true, stems:{bass:true,perc:true,pad:true,horn:true,vocal:true} }
 let liveBPM=null, lapStart=0, runStart=0, laps=[]
 let dist=0, lapInterval=null, currentTrack='fhouse', lapDist=400
 let synthBus, trackBus, trackSource=null, mixMode=0, restretchTimer=null
@@ -333,7 +352,7 @@ const viz=$('#viz'); for(let i=0;i<32;i++){ const b=document.createElement('i');
 function fmt(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(Math.floor((sec%1)*10))}
 function paceFmt(s){ const m=Math.floor(s/60), sec=s%60; return m+':'+String(sec).padStart(2,'0')}
 function getTargetSec(){ return parseInt(targetPaceEl.value,10)*lapDist/400}
-function setBPMUI(b){ targetBPM=b; $('#targetBpm').value=b; $('#targetBpmVal').textContent=b; $('#tgtBpm2').innerHTML=b+' <small>BPM</small>'; $('#bpmBadge').textContent=b+' BPM • '+(isPlaying?'PLAYING':'READY')}
+function setBPMUI(b){ targetBPM=b; $('#targetBpm').value=b; $('#targetBpmVal').textContent=b; $('#tgtBpm2').innerHTML=b+' <small>BPM</small>'; $('#bpmBadge').textContent=b+' BPM • '+(isPlaying?'PLAYING':'READY'); if(typeof updateStemRates==='function') updateStemRates() }
 $('#targetBpm').addEventListener('input',e=>{ setBPMUI(parseInt(e.target.value,10)); scheduleRestretch()})
 $('#targetPace').addEventListener('input',e=>{const v=parseInt(e.target.value,10);$('#targetPaceVal').textContent=paceFmt(v);$('#splitDelta').textContent='— target '+paceFmt(v*lapDist/400)})
 $('#intensity').addEventListener('input',e=>{intensity=parseInt(e.target.value,10);$('#intensityVal').textContent=intensity+'%'})
@@ -341,6 +360,7 @@ $('#adaptive').addEventListener('change',e=>adaptive=e.target.checked)
 document.querySelectorAll('#stemRow button').forEach(b=>{
  b.onclick=()=>{
   const k=b.dataset.stem; prefs.stems[k]=!prefs.stems[k]; b.classList.toggle('on',prefs.stems[k])
+  if(typeof stemPack!=='undefined') stemPack.sources.forEach(s=>{ if(s.role===k|| (k==='horn'&&s.role==='pad')) s.gain.gain.value=prefs.stems[k]?0.9:0 })
  }
 })
 function ensureAudio(){
@@ -567,16 +587,30 @@ function triggerLap(){
  ensureAudio(); trumpet(audioCtx.currentTime, delta<0?77:65, .28, .4); setTimeout(()=>playPing(delta<0?1600:400),140)
 }
 $('#lapBtn').onclick=triggerLap
-$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; gpsDistance=0; gpsLapBase=0; gpsSpeed=0; gpsLastPos=null; gpsRunningState='STATIONARY'; stopTrackLoop(); updateGpsUI(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — 100m / 200m / 400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
+$('#resetBtn').onclick=()=>{ isRunning=false; laps=[]; dist=0; gpsDistance=0; gpsLapBase=0; gpsSpeed=0; gpsLastPos=null; gpsRunningState='STATIONARY'; stopTrackLoop(); stopStemPack(); updateGpsUI(); $('#lapCount').textContent='0'; $('#lapSub').textContent='press START'; $('#splitTime').textContent='00:00'; $('#prog').style.width='0%'; $('#splitsBody').innerHTML='<tr><td colspan="5" style="opacity:.4;padding:14px;text-align:center">No laps yet — 100m / 200m / 400m</td></tr>'; $('#startBtn').textContent='▶ START RUN'; $('#lapBtn').disabled=true; $('#modeBadge').textContent='STANDBY'; $('#aheadBehind').textContent='±0.0s'; $('#progressTrack').setAttribute('stroke-dasharray','0 1000')}
 $('#shareBtn').onclick=()=>{ const txt=laps.map((l,i)=>'Lap '+(i+1)+': '+fmt(l.split)+' ('+(l.delta>0?'+':'')+l.delta.toFixed(1)+'s)').join('\n')||'No laps yet — run the track!'; if(navigator.share) navigator.share({title:'PaceBeat splits',text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>{ const b=$('#shareBtn'); b.textContent='COPIED ✓'; setTimeout(()=>b.textContent='SHARE SPLIT',1200)})}
 const PREVIEWS={
  fhouse:[
-  {kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/271442386/preview.mp3',label:'instrumental · 125 BPM'},
-  {kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/227239594/preview.mp3',label:'vocal mix · choir · 128 BPM',tag:'♪ Vocal Mix'}
+  {kind:'audio',src:'media/tech-house-125.mp3',label:'instrumental · 125 BPM',popular:true},
+  {kind:'audio',src:'media/tech-house-vocal-128.mp3',label:'vocal mix · choir · 128 BPM',tag:'♪ Vocal Mix',popular:true}
  ],
  acid:[{kind:'yt',src:'C1EPUeAVHZw',label:'raw & untamed · 130 BPM'}],
  deep:[{kind:'yt',src:'4Ty5RJuZbd0',label:'backing loop · 124 BPM'}],
- afro:[{kind:'audio',src:'https://audio-previews.elements.envatousercontent.com/files/650136845/preview.mp3',label:'vocal mix · 122 BPM',tag:'♪ Vocal Mix'}]
+ afro:[{kind:'audio',src:'media/afro-vocal-122.mp3',label:'vocal mix · 122 BPM',tag:'♪ Vocal Mix',popular:true}]
+}
+const AUDIO_CACHE='pacebeat-audio-v1'
+const cacheState={}
+async function fetchCachedAudio(url){
+ if(typeof caches!=='undefined'){
+  try{
+   const c=await caches.open(AUDIO_CACHE)
+   let resp=await c.match(url)
+   if(resp){ cacheState[url]='cached'; return {blob:await resp.blob(),cached:true} }
+   resp=await fetch(url)
+   if(resp.ok){ await c.put(url,resp.clone()); cacheState[url]='cached'; return {blob:await resp.blob(),cached:true} }
+  }catch(e){}
+ }
+ try{ const resp=await fetch(url); return resp.ok? {blob:await resp.blob(),cached:false} : null }catch(e){ return null }
 }
 const waveMini=$('#waveMini'); for(let i=0;i<24;i++){ const b=document.createElement('i'); b.style.animationDelay=(i*0.04)+'s'; waveMini.appendChild(b)}
 let previewActive=false, previewBtnEl=null
@@ -603,10 +637,11 @@ function updateSelPanel(){
   }
   holder.appendChild(btn)
  } else {
-  (PREVIEWS[currentTrack]||[]).forEach(pv=>{
+  (PREVIEWS[currentTrack]||[]).forEach((pv,idx)=>{
    const btn=document.createElement('button'); btn.className='pv-btn'
-   btn.textContent=(pv.tag||'▶ Preview')+' — '+pv.label
-   btn.onclick=()=>{
+   btn.textContent=(pv.popular?'🔥 ':'')+(pv.tag||'▶ Preview')+' — '+pv.label+(cacheState[pv.src]==='cached'?' ⚡':'')
+   btn.title=pv.popular?'Popular pick — cached locally after first play':'Preview'
+   btn.onclick=async()=>{
     if(previewActive&&previewBtnEl===btn){ stopPreview(); return }
     stopPreview()
     if(pv.kind==='yt'){
@@ -614,8 +649,15 @@ function updateSelPanel(){
      yt.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+pv.src+'?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
     } else {
      const ab=$('#audiobox'); ab.style.display='block'; $('#ytbox').style.display='none'
-     const a=ab.querySelector('audio'); a.src=pv.src; const p=a.play(); if(p&&p.catch) p.catch(()=>{})
+     btn.textContent='⏳ loading…'
+     const r=await fetchCachedAudio(pv.src)
+     if(!r){ btn.textContent='✕ load failed'; return }
+     const a=ab.querySelector('audio')
+     if(a._blobUrl) URL.revokeObjectURL(a._blobUrl)
+     a._blobUrl=URL.createObjectURL(r.blob); a.src=a._blobUrl
+     const p=a.play(); if(p&&p.catch) p.catch(()=>{})
      a.onended=stopPreview
+     $('#cacheStatus').textContent=r.cached? '⚡ cached locally — instant next time' : 'streamed (cache unavailable)'
     }
     previewActive=true; waveMini.classList.add('playing')
     btn.classList.add('playing'); previewBtnEl=btn
@@ -692,6 +734,67 @@ $('#fileInput').onchange=e=>{
  }
  fr.readAsArrayBuffer(file)
 }
+const STEM_ROLE_PATTERNS=[
+ [/\b(voc|vox|vocal|acapella|accapella|singing|choir|voice)/i,'vocal'],
+ [/\b(drum|kick|perc|beat|tops|groove)/i,'perc'],
+ [/\b(bass|sub|808)/i,'bass'],
+ [/\b(mel|chord|pad|synth|lead|arp|keys|piano|guitar|sax|stab|horn|brass|main|full|music)/i,'pad']
+]
+function detectStemRole(name){ for(const [re,role] of STEM_ROLE_PATTERNS){ if(re.test(name)) return role } return 'pad' }
+let stemPack={stems:[],playing:false,sources:[],bpm:null}
+function renderStemList(){
+ const el=$('#spFiles'); el.innerHTML=''
+ stemPack.stems.forEach(s=>{
+  const d=document.createElement('div'); d.className='spf'
+  d.innerHTML='<span class="role">'+s.role.toUpperCase()+'</span><span>'+s.name+'</span>'
+  el.appendChild(d)
+ })
+}
+async function loadStemFiles(files){
+ $('#spStatus').textContent='decoding…'
+ ensureAudio()
+ stemPack.stems=[]; let first=null
+ for(const f of files){
+  try{
+   const buf=await audioCtx.decodeAudioData(await f.arrayBuffer())
+   const role=detectStemRole(f.name)
+   stemPack.stems.push({name:f.name,role,buffer:buf})
+   if(!first) first=buf
+  }catch(e){ console.warn('stem skip',f.name) }
+ }
+ if(!stemPack.stems.length){ $('#spStatus').textContent='no decodable files'; return }
+ stemPack.bpm=detectBPM(first)
+ $('#spBpm').value=stemPack.bpm
+ renderStemList()
+ $('#spPlayBtn').disabled=false
+ $('#spStatus').textContent=stemPack.stems.length+' stems ready · '+stemPack.bpm+' BPM detected'
+}
+function stemRate(){ const b=parseFloat($('#spBpm').value)||stemPack.bpm; return ($('#spSync').checked&&b)? Math.min(2,Math.max(0.5,targetBPM/b)) : 1 }
+function playStemPack(){
+ if(!stemPack.stems.length) return
+ ensureAudio(); stopStemPack()
+ const t=audioCtx.currentTime+0.05, r=stemRate()
+ stemPack.sources=stemPack.stems.map(s=>{
+  const src=audioCtx.createBufferSource(); src.buffer=s.buffer; src.loop=true; src.playbackRate.value=r
+  const g=audioCtx.createGain(); g.gain.value=(prefs.stems[s.role]===false||(s.role==='pad'&&prefs.stems.horn===false))?0:0.9
+  src.connect(g).connect(trackBus); src.start(t)
+  return {src,gain:g,role:s.role}
+ })
+ stemPack.playing=true
+ $('#spPlayBtn').textContent='⏸ Stop Stems'; $('#spPlayBtn').classList.add('playing')
+ $('#spStatus').textContent='playing · rate '+r.toFixed(3)+'× · mix mode: '+(['SYNTH','SYNTH+STEMS','STEMS ONLY'][mixMode])
+}
+function stopStemPack(){
+ stemPack.sources.forEach(s=>{ try{s.src.stop()}catch(e){} })
+ stemPack.sources=[]; stemPack.playing=false
+ $('#spPlayBtn').textContent='▶ Play Stems'; $('#spPlayBtn').classList.remove('playing')
+}
+function updateStemRates(){ if(!stemPack||!stemPack.sources.length) return; const r=stemRate(); stemPack.sources.forEach(s=>{ s.src.playbackRate.value=r }) }
+$('#spLoadBtn').onclick=()=>$('#spInput').click()
+$('#spInput').onchange=e=>{ if(e.target.files.length) loadStemFiles([...e.target.files]) }
+$('#spPlayBtn').onclick=()=>{ stemPack.playing? stopStemPack() : playStemPack() }
+$('#spBpm').onchange=()=>updateStemRates()
+$('#spSync').onchange=()=>updateStemRates()
 function timeStretch(buf, ratio){
  if(Math.abs(ratio-1)<0.01) return buf
  const sr=buf.sampleRate
